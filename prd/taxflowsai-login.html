@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TaxFlowsAI Auth</title>
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous"
+  />
+  <style>
+    /* =======================
+       GLOBAL RESET & ROOT
+       ======================= */
+    :root {
+      --bg: #0d1a2e;
+      --card-bg: #1e2a44;
+      --primary: #2979ff;
+      --text: #e5e7eb;
+      --muted: #8f98a5;
+      --shadow: rgba(0,0,0,0.4);
+    }
+    * { box-sizing: border-box; margin:0; padding:0 }
+    html, body { height:100% }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* =======================
+       CONTAINER & LOGO
+       ======================= */
+    .auth-container {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 8px 24px var(--shadow);
+      width: 100%;
+      max-width: 400px;
+      padding: 2rem;
+      text-align: center;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      margin-bottom: 1.5rem;
+    }
+    .logo i { font-size: 2rem; color: var(--primary) }
+    .logo h1 { font-size: 1.75rem; font-weight: 500 }
+    .logo h1 span { color: var(--primary) }
+
+    /* =======================
+       HEADINGS & TEXT
+       ======================= */
+    h2 {
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+    .switch-link {
+      font-size: .9rem;
+      color: var(--text);
+      margin-top: 1rem;
+    }
+    .switch-link span {
+      color: var(--primary);
+      cursor: pointer;
+    }
+
+    /* =======================
+       INPUT GROUPS
+       ======================= */
+    .input-group {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .input-group i {
+      margin-right: .75rem;
+      color: var(--muted);
+    }
+    .input-group input,
+    .input-group select {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+    select {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+
+    /* =======================
+       BUTTONS
+       ======================= */
+    .btn {
+      width: 100%;
+      padding: .75rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .2s;
+      margin-bottom: 1rem;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: none;
+      color: var(--muted);
+    }
+    .btn-secondary:hover {
+      color: var(--text);
+    }
+
+    /* =======================
+       ROLE TOGGLE
+       ======================= */
+    .toggle {
+      display: inline-flex;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .toggle input { display: none; }
+    .toggle label {
+      padding: .5rem 1rem;
+      cursor: pointer;
+      color: var(--muted);
+      transition: background .2s, color .2s;
+      font-size: .95rem;
+      user-select: none;
+    }
+    .toggle input:checked + label {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* =======================
+       FORM SWITCH
+       ======================= */
+    form { display: none }
+    form.active { display: block }
+  </style>
+</head>
+<body>
+
+  <div class="auth-container">
+    <div class="logo">
+      <i class="fas fa-cloud"></i>
+      <h1>TaxFlows<span>AI</span></h1>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form id="loginForm" class="active">
+      <h2>Login</h2>
+      <div class="input-group">
+        <i class="fas fa-envelope"></i>
+        <input type="email" id="loginEmail" placeholder="Email Address" required />
+      </div>
+      <div class="input-group">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="loginPassword" placeholder="Password" required />
+      </div>
+      <button type="submit" class="btn btn-primary">Log in</button>
+      <div class="switch-link">
+        Don't have an account? <span id="showRegister">Sign up</span>
+      </div>
+    </form>
+
+    <!-- REGISTER FORM -->
+    <form id="registerForm">
+      <h2>Register</h2>
+
+      <!-- client/admin toggle -->
+      <div class="toggle">
+        <input type="radio" id="roleClient" name="role" value="client" checked />
+        <label for="roleClient">Client</label>
+        <input type="radio" id="roleAdmin" name="role" value="admin" />
+        <label for="roleAdmin">Admin</label>
+      </div>
+
+      <!-- Full Name -->
+      <div class="input-group">
+        <i class="fas fa-user"></i>
+        <input type="text" id="regName" placeholder="Full Name" required />
+      </div>
+
+      <!-- Email -->
+      <div class="input-group">
+        <i class="fas fa-envelope"></i>
+        <input type="email" id="regEmail" placeholder="Email Address" required />
+      </div>
+
+      <!-- Partner Select -->
+      <div class="input-group">
+        <i class="fas fa-handshake"></i>
+        <select id="regPartner" required>
+          <option value="" disabled selected>Select Tax Office</option>
+          <option>AXY Tax Office</option>
+          <option>BlueRiver CPAs</option>
+          <option>Delta Tax Services</option>
+          <option>Echo Financial</option>
+        </select>
+      </div>
+
+      <!-- Category (clients only) -->
+      <div class="input-group" id="categoryGroup">
+        <i class="fas fa-layer-group"></i>
+        <select id="regCategory">
+          <option value="" disabled selected>Select Category</option>
+          <option>Individual</option>
+          <option>Small Business</option>
+          <option>Corporation</option>
+        </select>
+      </div>
+
+      <!-- Password -->
+      <div class="input-group">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="regPass" placeholder="Password" required />
+      </div>
+      <div class="input-group">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="regPass2" placeholder="Confirm Password" required />
+      </div>
+
+      <button type="submit" class="btn btn-primary">Register</button>
+      <div class="switch-link">
+        Already have an account? <span id="showLogin">Log in</span>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // FORM TOGGLING
+    const loginForm   = document.getElementById('loginForm');
+    const registerForm= document.getElementById('registerForm');
+    document.getElementById('showRegister').addEventListener('click', () => {
+      loginForm.classList.remove('active');
+      registerForm.classList.add('active');
+    });
+    document.getElementById('showLogin').addEventListener('click', () => {
+      registerForm.classList.remove('active');
+      loginForm.classList.add('active');
+    });
+
+    // SHOW/HIDE CATEGORY FOR CLIENTS
+    const roleClient   = document.getElementById('roleClient');
+    const roleAdmin    = document.getElementById('roleAdmin');
+    const categoryGroup= document.getElementById('categoryGroup');
+    function toggleCategory() {
+      categoryGroup.style.display = roleClient.checked ? 'flex' : 'none';
+    }
+    roleClient.addEventListener('change', toggleCategory);
+    roleAdmin.addEventListener('change', toggleCategory);
+    toggleCategory();
+
+    // LOCAL STORAGE KEYS
+    const USERS_PREFIX = 'user_';
+    const CURRENT_USER = 'currentUser';
+
+    // REGISTRATION
+    registerForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const name     = document.getElementById('regName').value.trim();
+      const email    = document.getElementById('regEmail').value.trim();
+      const partner  = document.getElementById('regPartner').value;
+      const role     = document.querySelector('input[name=role]:checked').value;
+      const category = document.getElementById('regCategory').value;
+      const pass1    = document.getElementById('regPass').value;
+      const pass2    = document.getElementById('regPass2').value;
+
+      if (pass1 !== pass2) {
+        return alert("Passwords don't match");
+      }
+      if (role === 'client' && !category) {
+        return alert("Please select your category");
+      }
+
+      const key = USERS_PREFIX + email;
+      if (localStorage.getItem(key)) {
+        return alert("Email already registered");
+      }
+
+      localStorage.setItem(key, JSON.stringify({
+        name, email, partner, role, category, password: pass1
+      }));
+      alert(`Registered ${role}: ${name}`);
+      registerForm.classList.remove('active');
+      loginForm.classList.add('active');
+    });
+
+    // LOGIN
+    loginForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass  = document.getElementById('loginPassword').value;
+      const key   = USERS_PREFIX + email;
+      const userJSON = localStorage.getItem(key);
+      if (!userJSON) {
+        return alert("No account found");
+      }
+      const user = JSON.parse(userJSON);
+      if (user.password !== pass) {
+        return alert("Invalid password");
+      }
+      localStorage.setItem(CURRENT_USER, email);
+      
+      loginForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPassword').value;
+  const key   = USERS_PREFIX + email;
+  const userJSON = localStorage.getItem(key);
+  
+  if (!userJSON) {
+    return alert("No account found");
+  }
+  
+  const user = JSON.parse(userJSON);
+  if (user.password !== pass) {
+    return alert("Invalid password");
+  }
+  
+  localStorage.setItem(CURRENT_USER, email);
+  
+  if(user.role === 'admin') {
+    window.location.href = 'taxflowsai-admin-dashboard.html';
+  } else {
+    window.location.href = 'taxflowsai-client-dashboard.html';
+  }
+});
+
+    });
+  </script>
+</body>
+</html>
