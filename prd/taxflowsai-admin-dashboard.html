@@ -178,9 +178,46 @@
       background:none; border:none; color:var(--primary);
       font-size:.9rem; cursor:pointer;
     }
+
+    /* SETTINGS MODAL */
+    .modal-overlay {
+      position:fixed; top:0; left:0; width:100vw; height:100vh;
+      background:rgba(0,0,0,0.6); display:flex; align-items:center;
+      justify-content:center; z-index:1000;
+    }
+    .modal-overlay.hidden { display:none }
+    .modal {
+      background:var(--card-bg); border-radius:12px; padding:1.5rem;
+      box-shadow:0 8px 24px var(--shadow); max-width:320px; width:90%;
+    }
+    .modal-header {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:1rem;
+    }
+    .modal-header h2 { font-size:1.25rem }
+    .modal-close {
+      background:none; border:none; font-size:1.25rem;
+      color:var(--text); cursor:pointer;
+    }
+    .settings-profile strong { display:block; font-size:1.1rem; margin-bottom:.5rem; }
+    .settings-profile span {
+      display:block; color:var(--muted); font-size:.9rem; margin-bottom:.5rem;
+    }
+    .settings-divider {
+      border:none; height:1px; background:rgba(255,255,255,0.1); margin:1rem 0;
+    }
+    .logout-btn {
+      width:100%; padding:.5rem; background:none; border:1px solid var(--muted);
+      border-radius:6px; color:var(--muted); cursor:pointer;
+      transition:background .2s,color .2s;
+    }
+    .logout-btn:hover {
+      background:var(--text); color:var(--bg);
+    }
   </style>
 </head>
 <body>
+
   <div class="layout">
     <!-- SIDEBAR -->
     <aside class="sidebar">
@@ -207,7 +244,8 @@
           <h1>TaxFlows<span>AI</span></h1>
         </div>
         <div class="header-right">
-          <button id="logoutBtnHeader"><i class="fas fa-sign-out-alt"></i></button>
+          <!-- gear opens settings now -->
+          <button id="settingsBtnHeader"><i class="fas fa-cog"></i></button>
         </div>
       </div>
       <hr/>
@@ -263,29 +301,71 @@
     </main>
   </div>
 
+  <!-- SETTINGS MODAL -->
+  <div id="settingsModal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Settings</h2>
+        <button id="closeSettingsModal" class="modal-close">&times;</button>
+      </div>
+      <div class="settings-profile">
+        <strong id="profileName">…</strong>
+        <span id="profileEmail">…</span>
+        <span id="profilePartner">…</span>
+      </div>
+      <hr class="settings-divider"/>
+      <button id="logoutModalBtn" class="logout-btn">Logout</button>
+    </div>
+  </div>
+
   <script>
-    // AUTH GUARD & PROFILE
+    // AUTH & PROFILE
     const CURRENT = localStorage.getItem('currentUser');
     if (!CURRENT) location.replace('taxflowsai-login.html');
-
     const me = JSON.parse(localStorage.getItem('user_' + CURRENT));
     if (me.role !== 'admin') location.replace('taxflowsai-client-dashboard.html');
 
-    // Dynamic greeting & partner
+    // HEADER GREETING
     document.getElementById('greet').textContent   = `Welcome, ${me.name}`;
     document.getElementById('subtext').textContent = `You are an admin from ${me.partner}.`;
 
-    // LOGOUT
-    function logout() {
+    // LOGOUT (sidebar)
+    document.getElementById('logoutBtn').onclick = () => {
       localStorage.removeItem('currentUser');
       location.replace('taxflowsai-login.html');
-    }
-    document.getElementById('logoutBtn').onclick       = logout;
-    document.getElementById('logoutBtnHeader').onclick = logout;
+    };
+
+    // SETTINGS MODAL ELEMENTS
+    const settingsBtnHeader = document.getElementById('settingsBtnHeader');
+    const settingsModal     = document.getElementById('settingsModal');
+    const closeSettings     = document.getElementById('closeSettingsModal');
+    const logoutModalBtn    = document.getElementById('logoutModalBtn');
+    const pName             = document.getElementById('profileName');
+    const pEmail            = document.getElementById('profileEmail');
+    const pPartner          = document.getElementById('profilePartner');
+
+    // OPEN SETTINGS
+    settingsBtnHeader.onclick = () => {
+      pName.textContent    = me.name;
+      pEmail.textContent   = me.email;
+      pPartner.textContent = `Partner: ${me.partner}`;
+      settingsModal.classList.remove('hidden');
+    };
+    // CLOSE SETTINGS
+    closeSettings.onclick = () => settingsModal.classList.add('hidden');
+    settingsModal.onclick = e => {
+      if (e.target === settingsModal) settingsModal.classList.add('hidden');
+    };
+    // LOGOUT FROM MODAL
+    logoutModalBtn.onclick = () => {
+      localStorage.removeItem('currentUser');
+      location.replace('taxflowsai-login.html');
+    };
+
+    // --- REST OF EXISTING ADMIN JS BELOW (unchanged) ---
 
     // CLIENTS DATA
     let clients = JSON.parse(localStorage.getItem('clients')) || [];
-    // ensure we store back if newly initialized
     localStorage.setItem('clients', JSON.stringify(clients));
 
     // UI REFS
@@ -314,18 +394,18 @@
     // Render table
     function renderTable() {
       tableBody.innerHTML = '';
-      const docFilter    = filterDoc.value;
-      const statusFilter = filterStatus.value;
-
+      const df = filterDoc.value, sf = filterStatus.value;
       clients
         .filter(c => c.category === currentCategory)
-        .filter(c => docFilter === 'all'    || c.docs.some(d => d.name.split('.')[0] === docFilter))
-        .filter(c => statusFilter === 'all' || c.docs.some(d => d.status === statusFilter))
+        .filter(c => df === 'all' || c.docs.some(d => d.name.split('.')[0] === df))
+        .filter(c => sf === 'all' || c.docs.some(d => d.status === sf))
         .forEach((c,i) => {
           const tags = c.docs.map(d=>d.name.split('.')[0]).join(', ');
-          const overall = c.docs.every(d=>d.status==='complete') ? 'complete'
-                        : c.docs.every(d=>d.status==='incomplete') ? 'incomplete'
-                        : 'inprogress';
+          const all = c.docs.every(d=>d.status==='complete')
+                    ? 'complete'
+                    : c.docs.every(d=>d.status==='incomplete')
+                      ? 'incomplete'
+                      : 'inprogress';
           const tr = document.createElement('tr');
           tr.dataset.idx = i;
           tr.innerHTML = `
@@ -333,7 +413,9 @@
               <img src="${c.avatar}" /><span>${c.name}</span>
             </div></td>
             <td>${tags}</td>
-            <td><span class="badge ${overall}">${overall.charAt(0).toUpperCase()+overall.slice(1)}</span></td>
+            <td><span class="badge ${all}">
+              ${all.charAt(0).toUpperCase()+all.slice(1)}
+            </span></td>
           `;
           tableBody.appendChild(tr);
         });
@@ -354,11 +436,10 @@
         currentCategory = btn.dataset.category;
         crumbElem.textContent   = currentCategory.toLowerCase();
         crumbHeader.textContent = currentCategory;
-        backBtn.click();        // ensure we're on list view
+        backBtn.click();
         renderTable();
       };
     });
-
     filterDoc.onchange    = renderTable;
     filterStatus.onchange = renderTable;
 
@@ -367,11 +448,9 @@
       const c = clients[idx];
       listCard.style.display   = 'none';
       detailView.style.display = 'block';
-
       document.getElementById('crumbCategory').textContent = currentCategory;
       document.getElementById('crumbClient').textContent   = c.name;
       document.getElementById('detailName').textContent    = c.name;
-
       docsContainer.innerHTML = '';
       c.docs.forEach((d,i) => {
         const card = document.createElement('div');
@@ -394,23 +473,12 @@
         `;
         docsContainer.appendChild(card);
       });
-
-      // Wire up detail buttons
-      docsContainer.querySelectorAll('.btn-view').forEach(b=>{
-        b.onclick = () => window.open(c.docs[b.dataset.idx].url,'_blank');
-      });
-      docsContainer.querySelectorAll('.btn-approve').forEach(b=>{
-        b.onclick = () => { c.docs[b.dataset.idx].status='complete'; saveAndRefresh(idx); };
-      });
-      docsContainer.querySelectorAll('.btn-deny').forEach(b=>{
-        b.onclick = () => { c.docs[b.dataset.idx].status='incomplete'; saveAndRefresh(idx); };
-      });
-      docsContainer.querySelectorAll('.comment-box').forEach(txt=>{
-        txt.onchange = () => { c.docs[txt.dataset.idx].comment = txt.value; saveClients(); };
-      });
+      docsContainer.querySelectorAll('.btn-view').forEach(b=>b.onclick = ()=>window.open(c.docs[b.dataset.idx].url,'_blank'));
+      docsContainer.querySelectorAll('.btn-approve').forEach(b=>b.onclick = ()=>{ c.docs[b.dataset.idx].status='complete'; saveAndRefresh(idx); });
+      docsContainer.querySelectorAll('.btn-deny').forEach(b=>b.onclick    = ()=>{ c.docs[b.dataset.idx].status='incomplete'; saveAndRefresh(idx); });
+      docsContainer.querySelectorAll('.comment-box').forEach(txt=>txt.onchange = ()=>{ c.docs[txt.dataset.idx].comment = txt.value; saveClients(); });
     }
 
-    // Back to list
     backBtn.onclick = () => {
       detailView.style.display = 'none';
       listCard.style.display   = 'block';
@@ -426,7 +494,7 @@
     }
 
     // Initial render
-    document.getElementById('crumb').textContent = currentCategory.toLowerCase();
+    document.getElementById('crumb').textContent       = currentCategory.toLowerCase();
     document.getElementById('crumbHeader').textContent = currentCategory;
     renderTable();
   </script>
