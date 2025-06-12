@@ -5,15 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TaxFlowsAI Dashboard</title>
   <!-- Font Awesome -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    crossorigin="anonymous"
-  />
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        crossorigin="anonymous"/>
   <style>
-    /* =======================
-       GLOBAL & ROOT
-       ======================= */
     :root {
       --bg: #0d1a2e;
       --card-bg: #1e2a44;
@@ -22,436 +17,208 @@
       --muted: #8f98a5;
       --shadow: rgba(0,0,0,0.4);
     }
-    * { box-sizing: border-box; margin:0; padding:0 }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: "Segoe UI", sans-serif;
-    }
+    * { box-sizing:border-box; margin:0; padding:0 }
+    body { background:var(--bg); color:var(--text); font-family:"Segoe UI",sans-serif }
+    .hidden { display:none }
     .container { max-width:1200px; margin:auto; padding:2rem 1rem }
 
-    /* =======================
-       HEADER
-       ======================= */
-    .header {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-    }
-    .header-left {
-      display:flex;
-      align-items:center;
-      gap:.5rem;
-    }
-    .header-left i {
-      font-size:2rem;
-      color:var(--primary);
-    }
-    .header-left h1 {
-      font-size:1.5rem;
-      font-weight:500;
-    }
-    .header-left h1 span {
-      color:var(--primary);
-    }
+    /* HEADER */
+    .header { display:flex; justify-content:space-between; align-items:center }
+    .header-left { display:flex; align-items:center; gap:.5rem }
+    .header-left i { font-size:2rem; color:var(--primary) }
+    .header-left h1 { font-size:1.5rem; font-weight:500 }
+    .header-left h1 span { color:var(--primary) }
     .header-right button {
-      background:none;
-      border:none;
-      color:var(--muted);
-      font-size:1.5rem;
-      cursor:pointer;
+      background:none; border:none; color:var(--muted);
+      font-size:1.5rem; cursor:pointer;
     }
-    .header-right button:hover {
-      color:var(--text);
-    }
-    .divider {
-      margin:1rem 0 2rem;
-      height:1px;
-      border:none;
-      background:rgba(255,255,255,0.1);
-    }
+    .header-right button:hover { color:var(--text) }
+    .divider { margin:1rem 0 2rem; height:1px; border:none; background:rgba(255,255,255,0.1) }
 
-    /* =======================
-       TOP SECTION
-       ======================= */
+    /* TOP */
     .top {
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      flex-wrap:wrap;
-      gap:1rem;
+      display:flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:1rem;
     }
-    .greeting {
-      font-size:1.75rem;
-      font-weight:500;
-    }
-    .subtext {
-      font-size:.9rem;
-      color:var(--muted);
-      margin-top:.25rem;
-    }
+    .greeting { font-size:1.75rem; font-weight:500 }
+    .subtext { font-size:.9rem; color:var(--muted); margin-top:.25rem }
     .progress-tabs {
-      display:flex;
-      align-items:center;
-      gap:1.5rem;
-      position:relative;
-      flex:1;
-      max-width:400px;
+      display:flex; align-items:center; gap:1.5rem;
+      position:relative; flex:1; max-width:400px;
     }
     .progress-tabs span {
-      cursor:pointer;
-      color:var(--muted);
-      padding-bottom:.25rem;
-      font-size:.9rem;
+      cursor:pointer; color:var(--muted);
+      padding-bottom:.25rem; font-size:.9rem;
     }
     .progress-tabs span.active {
-      color:var(--text);
-      font-weight:500;
+      color:var(--text); font-weight:500;
     }
     .progress-bar {
-      position:absolute;
-      bottom:0;
-      height:3px;
-      background:var(--primary);
+      position:absolute; bottom:0;
+      height:3px; background:var(--primary);
       transition:left .3s, width .3s;
     }
     .btn-open-upload {
-      background:var(--primary);
-      color:#fff;
-      border:none;
-      padding:.75rem 1.25rem;
-      border-radius:8px;
-      cursor:pointer;
-      font-size:.9rem;
+      background:var(--primary); color:#fff; border:none;
+      padding:.75rem 1.25rem; border-radius:8px;
+      cursor:pointer; font-size:.9rem;
     }
-    .btn-open-upload:hover {
-      opacity:.9;
-    }
+    .btn-open-upload:hover { opacity:.9 }
 
-    /* =======================
-       GRID & CARDS
-       ======================= */
+    /* GRID & CARDS */
     .grid {
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-      gap:1.5rem;
-      margin-top:2rem;
+      gap:1.5rem; margin-top:2rem;
     }
     .card {
-      background:var(--card-bg);
-      border-radius:12px;
-      padding:1.25rem;
-      box-shadow:0 4px 12px var(--shadow);
+      background:var(--card-bg); border-radius:12px;
+      padding:1.25rem; box-shadow:0 4px 12px var(--shadow);
     }
-    .card h3 {
-      font-size:1.1rem;
-      margin-bottom:1rem;
-    }
+    .card h3 { font-size:1.1rem; margin-bottom:1rem }
 
-    /* =======================
-       DOCUMENT LIST
-       ======================= */
-    .doc-list {
-      list-style:none;
-      padding:0;
-      margin:0;
-    }
+    /* DOC LIST */
+    .doc-list { list-style:none; padding:0; margin:0 }
     .doc-list li {
-      display:flex;
-      align-items:center;
-      gap:.75rem;
-      padding:.5rem;
-      border-radius:6px;
-      cursor:pointer;
-      transition:background .2s;
+      display:flex; align-items:center; gap:.75rem; padding:.5rem;
+      border-radius:6px; cursor:pointer; transition:background .2s;
     }
-    .doc-list li:hover {
-      background:rgba(255,255,255,0.05);
-    }
+    .doc-list li:hover { background:rgba(255,255,255,0.05) }
     .doc-list li i {
-      font-size:1.5rem;
-      color:var(--primary);
-      min-width:1.5rem;
+      font-size:1.5rem; color:var(--primary); min-width:1.5rem;
     }
-    .tag-list {
-      margin-top:.5rem;
-      display:flex;
-      flex-wrap:wrap;
-      gap:.5rem;
-    }
+    .tag-list { margin-top:.5rem; display:flex; flex-wrap:wrap; gap:.5rem }
     .tag {
-      background:var(--primary);
-      color:#fff;
-      padding:.25rem .5rem;
-      border-radius:4px;
-      font-size:.75rem;
+      background:var(--primary); color:#fff;
+      padding:.25rem .5rem; border-radius:4px; font-size:.75rem;
     }
 
-    /* =======================
-       NOTIFICATIONS
-       ======================= */
+    /* NOTIFICATIONS */
     .no-notifs {
-      text-align:center;
-      color:var(--muted);
-      padding:1.5rem 0;
-      font-size:.9rem;
+      text-align:center; color:var(--muted);
+      padding:1.5rem 0; font-size:.9rem;
     }
 
-    /* =======================
-       AI Chat
-       ======================= */
-    .chat-icon {
-      text-align:center;
-      margin-bottom:.75rem;
-    }
-    .chat-icon i {
-      font-size:2.5rem;
-      color:var(--primary);
-    }
-    .chat-quick {
-      list-style:none;
-      padding:0;
-      margin:0 0 1rem;
-    }
+    /* AI CHAT */
+    .chat-icon { text-align:center; margin-bottom:.75rem }
+    .chat-icon i { font-size:2.5rem; color:var(--primary) }
+    .chat-quick { list-style:none; padding:0; margin:0 0 1rem }
     .chat-quick li a {
-      display:block;
-      background:#0f243f;
-      padding:.75rem 1rem;
-      border-radius:8px;
-      color:var(--text);
-      text-decoration:none;
-      font-size:.9rem;
-      margin-bottom:.75rem;
-      transition:background .2s;
+      display:block; background:#0f243f; padding:.75rem 1rem;
+      border-radius:8px; color:var(--text); text-decoration:none;
+      font-size:.9rem; margin-bottom:.75rem; transition:background .2s;
     }
-    .chat-quick li a:hover {
-      background:#0d1f38;
-    }
-    .chat-input {
-      display:flex;
-      flex-direction:column;
-      gap:.5rem;
-    }
+    .chat-quick li a:hover { background:#0d1f38 }
+    .chat-input { display:flex; flex-direction:column; gap:.5rem }
     .chat-input input {
-      padding:.75rem 1rem;
-      border:none;
-      border-radius:8px;
-      background:#0f243f;
-      color:var(--text);
+      padding:.75rem 1rem; border:none; border-radius:8px;
+      background:#0f243f; color:var(--text);
     }
     .chat-input button {
-      background:var(--primary);
-      border:none;
-      border-radius:8px;
-      padding:.75rem;
-      color:#fff;
-      cursor:pointer;
+      background:var(--primary); border:none; border-radius:8px;
+      padding:.75rem; color:#fff; cursor:pointer;
       transition:background .2s;
     }
-    .chat-input button:hover {
-      background:#1a73e8;
-    }
+    .chat-input button:hover { background:#1a73e8 }
 
-    /* =======================
-       MODALS
-       ======================= */
+    /* MODALS */
     .modal-overlay {
-      position:fixed;
-      top:0; left:0;
+      position:fixed; top:0; left:0;
       width:100vw; height:100vh;
       background:rgba(0,0,0,0.6);
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      display:flex; align-items:center; justify-content:center;
       z-index:1000;
     }
-    .modal-overlay.hidden {
-      display:none;
-    }
+    .modal-overlay.hidden { display:none }
     .modal {
-      background:var(--card-bg);
-      border-radius:12px;
-      padding:1.5rem;
-      position:relative;
+      background:var(--card-bg); border-radius:12px;
+      padding:1.5rem; position:relative;
       box-shadow:0 8px 24px var(--shadow);
-      max-height:90vh;
-      overflow:auto;
+      max-height:90vh; overflow:auto;
     }
     .modal-header {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
+      display:flex; justify-content:space-between; align-items:center;
       margin-bottom:1rem;
     }
     .modal-close {
-      background:none;
-      border:none;
-      font-size:1.25rem;
-      color:var(--text);
-      cursor:pointer;
+      background:none; border:none; font-size:1.25rem;
+      color:var(--text); cursor:pointer;
     }
 
-    /* Upload Modal specifics */
-    .upload-modal {
-      width:400px;
-      max-width:90%;
-    }
-    .upload-modal h2 {
-      margin:0 0 1rem;
-      font-size:1.25rem;
-    }
-    .drop-zone {
-      border:2px dashed var(--muted);
-      border-radius:8px;
-      padding:2rem;
-      text-align:center;
-      color:var(--muted);
-      cursor:pointer;
-      transition:background .2s,border-color .2s;
-    }
+    /* Upload Modal */
+    .upload-modal { width:400px; max-width:90% }
+    .drop-zone { border:2px dashed var(--muted); border-radius:8px;
+                 padding:2rem; text-align:center; color:var(--muted);
+                 cursor:pointer; transition:background .2s,border-color .2s; }
     .drop-zone.dragover {
-      border-color:var(--primary);
-      background:rgba(41,121,255,0.05);
+      border-color:var(--primary); background:rgba(41,121,255,0.05);
     }
-    .modal-file-list {
-      list-style:none;
-      margin-top:1rem;
-      padding:0;
-      max-height:8rem;
-      overflow-y:auto;
-    }
+    .modal-file-list { list-style:none; margin-top:1rem;
+                       padding:0; max-height:8rem; overflow-y:auto }
     .modal-file-list li {
-      background:var(--card-bg);
-      padding:.75rem 1rem;
-      border-radius:6px;
-      margin-bottom:.5rem;
-      font-size:.9rem;
+      background:var(--card-bg); padding:.75rem 1rem;
+      border-radius:6px; margin-bottom:.5rem; font-size:.9rem;
       position:relative;
     }
     .modal-file-list li .size {
-      position:absolute;
-      top:.75rem;
-      right:1rem;
-      color:var(--muted);
-      font-size:.85rem;
+      position:absolute; top:.75rem; right:1rem;
+      color:var(--muted); font-size:.85rem;
     }
-    .modal-file-list li .tag-input {
-      display:block;
-      width:100%;
-      margin-top:.75rem;
-      padding:.5rem;
-      border-radius:4px;
-      border:1px solid var(--muted);
-      background:var(--bg);
-      color:var(--text);
-      font-size:.9rem;
-    }
-    .modal-actions {
-      display:flex;
-      justify-content:flex-end;
-      gap:1rem;
-      margin-top:1.5rem;
-    }
+    .modal-actions { display:flex; justify-content:flex-end;
+                     gap:1rem; margin-top:1.5rem }
     .btn-modal-cancel {
-      background:none;
-      border:none;
-      color:var(--text);
-      font-size:.95rem;
-      cursor:pointer;
+      background:none; border:none; color:var(--text);
+      font-size:.95rem; cursor:pointer;
     }
     .btn-modal-upload {
-      background:var(--primary);
-      border:none;
-      color:#fff;
-      padding:.5rem 1rem;
-      border-radius:4px;
-      font-size:.95rem;
-      cursor:pointer;
+      background:var(--primary); border:none; color:#fff;
+      padding:.5rem 1rem; border-radius:4px;
+      font-size:.95rem; cursor:pointer;
     }
-    .btn-modal-upload:disabled {
-      opacity:.5;
-      cursor:not-allowed;
-    }
+    .btn-modal-upload:disabled { opacity:.5; cursor:not-allowed }
 
-    /* Settings Modal */
-    .settings-modal {
-      width:320px;
-      max-width:90%;
-    }
-    .settings-profile {
-      margin-bottom:1rem;
-    }
-    .settings-profile strong {
-      font-size:1.1rem;
-    }
-    .settings-profile .email {
-      display:block;
-      color:var(--muted);
-      font-size:.9rem;
+    /* SETTINGS MODAL */
+    .settings-modal { width:360px; max-width:90% }
+    .settings-profile { margin-bottom:1rem }
+    .settings-profile strong { font-size:1.1rem }
+    .settings-profile .email,
+    .settings-profile .phone,
+    .settings-profile .category {
+      display:block; color:var(--muted); font-size:.9rem; margin-bottom:.5rem;
     }
     .settings-divider {
-      border:none;
-      height:1px;
-      background:rgba(255,255,255,0.1);
+      border:none; height:1px; background:rgba(255,255,255,0.1);
       margin:1rem 0;
     }
-    .settings-stats div {
-      margin-bottom:.75rem;
-      font-size:.95rem;
-    }
-    .logout-btn {
-      width:100%;
-      border:1px solid var(--muted);
-      background:none;
-      color:var(--muted);
-      padding:.5rem;
-      border-radius:6px;
-      cursor:pointer;
-      font-size:.95rem;
-      transition:background .2s,color .2s,border .2s;
-    }
-    .logout-btn:hover {
-      background:var(--text);
-      color:var(--bg);
-      border-color:var(--text);
-    }
+    .settings-stats div { margin-bottom:.75rem; font-size:.95rem }
 
-    /* Document Viewer */
-    .doc-viewer .modal {
-      width:80%;
-      max-width:800px;
-      padding:0;
-      overflow:hidden;
-    }
-    .doc-viewer iframe {
-      width:100%;
-      height:80vh;
-      border:none;
-    }
-
-    /* =======================
-       ADMIN TABLE
-       ======================= */
-    .admin-table {
-      width:100%;
-      border-collapse: collapse;
-      margin-top:1rem;
-    }
-    .admin-table th,
-    .admin-table td {
-      padding:.75rem;
-      border:1px solid rgba(255,255,255,0.1);
-      text-align:left;
+    .settings-form .input-group { margin-bottom:1rem }
+    .settings-form .input-group label {
+      display:block; margin-bottom:.25rem; color:var(--text);
       font-size:.9rem;
     }
-    .admin-table th {
-      background:rgba(255,255,255,0.05);
-    }
-    .admin-section h3 {
-      margin-bottom:1rem;
-      font-size:1.2rem;
+    .settings-form .input-group input,
+    .settings-form .input-group select {
+      width:100%; padding:.5rem; border:none; border-radius:6px;
+      background:var(--card-bg); color:var(--text); font-size:1rem;
     }
 
+    .btn-primary {
+      background:var(--primary); color:#fff; border:none;
+      padding:.5rem 1rem; border-radius:6px; cursor:pointer;
+      font-size:.9rem; font-weight:500; transition:background .2s;
+    }
+    .btn-primary:hover { background:#1d5fd9 }
+    .btn-secondary {
+      background:none; color:var(--primary); border:1px solid var(--primary);
+      padding:.5rem 1rem; border-radius:6px; cursor:pointer;
+      font-size:.9rem; font-weight:500; transition:background .2s;
+    }
+    .btn-secondary:hover { background:rgba(41,121,255,0.1) }
+
+    /* DOC VIEWER */
+    .doc-viewer .modal { width:80%; max-width:800px; overflow:hidden; padding:0 }
+    .doc-viewer iframe { width:100%; height:80vh; border:none }
   </style>
 </head>
 <body>
@@ -464,14 +231,12 @@
         <h1>TaxFlows<span>AI</span></h1>
       </div>
       <div class="header-right">
-        <button id="settingsBtn">
-          <i class="fas fa-cog"></i>
-        </button>
+        <button id="settingsBtn"><i class="fas fa-cog"></i></button>
       </div>
     </div>
     <hr class="divider"/>
 
-    <!-- TOP -->
+    <!-- TOP SECTION -->
     <div class="top">
       <div>
         <div class="greeting">Welcome, …</div>
@@ -486,11 +251,12 @@
       <button id="openUploadBtn" class="btn-open-upload">Upload Document</button>
     </div>
 
-    <!-- DASHBOARD CONTENT -->
+    <!-- DASHBOARD GRID -->
     <div id="clientView">
       <div class="grid">
         <div class="card">
-          <h3>Documents Uploaded</h3>
+          <!-- dynamic heading -->
+          <h3 id="docsTitle">Documents Uploaded</h3>
           <ul class="doc-list"></ul>
         </div>
         <div class="card">
@@ -499,7 +265,7 @@
         </div>
         <div class="card">
           <div class="chat-icon"><i class="fas fa-comments"></i></div>
-          <h3 style="text-align:center;margin-bottom:1rem;">AI Chat</h3>
+          <h3 style="text-align:center; margin-bottom:1rem;">AI Chat</h3>
           <ul class="chat-quick">
             <li><a href="#">What’s the status of my refund?</a></li>
             <li><a href="#">How do I upload a 1099?</a></li>
@@ -511,8 +277,6 @@
         </div>
       </div>
     </div>
-
-
   </div>
 
   <!-- UPLOAD MODAL -->
@@ -544,19 +308,54 @@
         <button id="closeSettingsModal" class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="settings-profile">
+        <!-- VIEW MODE -->
+        <div class="settings-profile" id="profileView">
           <strong id="profileName">…</strong>
-          <span class="email" id="profileEmail">…</span>
-          <span class="email" id="profilePartner">…</span>
+          <span class="email"   id="profileEmail">…</span>
+          <span class="phone"   id="profilePhone">…</span>
+          <span class="category"id="profileCategory">…</span>
+          <span class="partner" id="profilePartner">…</span>
+          <button id="editProfileBtn" class="btn-secondary">Edit</button>
         </div>
         <hr class="settings-divider"/>
-        <div class="settings-stats">
+
+        <!-- EDIT MODE -->
+        <div class="settings-form hidden" id="profileEdit">
+          <div class="input-group">
+            <label for="editName">Name</label>
+            <input type="text" id="editName"/>
+          </div>
+          <div class="input-group">
+            <label for="editEmail">Email</label>
+            <input type="email" id="editEmail"/>
+          </div>
+          <div class="input-group">
+            <label for="editPhone">Phone</label>
+            <input type="text" id="editPhone"/>
+          </div>
+          <div class="input-group">
+            <label for="editCategory">Category</label>
+            <select id="editCategory">
+              <option>Individual</option>
+              <option>Small Business</option>
+              <option>Corporation</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="editPartner">Partner / Network</label>
+            <input type="text" id="editPartner"/>
+          </div>
+          <button id="saveProfileBtn"   class="btn-primary">Save</button>
+          <button id="cancelEditBtn"    class="btn-secondary">Cancel</button>
+        </div>
+
+        <div class="settings-stats" style="margin-top:1.5rem;">
           <div>Uploaded: <span id="stat-uploaded">0</span></div>
           <div>In Review: <span id="stat-review">0</span></div>
           <div>Filed: <span id="stat-filed">0</span></div>
         </div>
         <div style="margin-top:1rem;">
-          <button id="logoutBtn" class="logout-btn">Logout</button>
+          <button id="logoutBtn" class="btn-secondary">Logout</button>
         </div>
       </div>
     </div>
@@ -570,81 +369,118 @@
   </div>
 
   <script>
-    // =======================
     // AUTH GUARD & PROFILE
-    // =======================
     const CURRENT = localStorage.getItem('currentUser');
     if (!CURRENT) location.replace('taxflowsai-login.html');
-    const me     = JSON.parse(localStorage.getItem('user_' + CURRENT));
-    // Greeting + subtext
-    document.querySelector('.greeting').textContent = 'Welcome, ' + me.name;
-    document.querySelector('.subtext').textContent  =
-      me.role === 'client'
-        ? `You’re part of the ${me.partner} network.`
-        : `You’re an Admin.`;
-    // Settings modal profile
-    document.getElementById('profileName').textContent    = me.name;
-    document.getElementById('profileEmail').textContent   = me.email;
-    document.getElementById('profilePartner').textContent = me.role === 'client'
-      ? `Partner: ${me.partner}`
-      : '';
+    const me = JSON.parse(localStorage.getItem('user_' + CURRENT)) || {};
+    me.phone    = me.phone    || '';
+    me.category = me.category || 'Individual';
+    me.partner  = me.partner  || '';
 
-    // Show client vs admin section
-    const clientView = document.getElementById('clientView');
-    const adminView  = document.getElementById('adminView');
-    
+    // ELEMENTS
+    const greeting     = document.querySelector('.greeting');
+    const subtext      = document.querySelector('.subtext');
+    const settingsBtn  = document.getElementById('settingsBtn');
+    const settingsMd   = document.getElementById('settingsModal');
+    const closeSet     = document.getElementById('closeSettingsModal');
+    const logoutBtn    = document.getElementById('logoutBtn');
+    const profileView  = document.getElementById('profileView');
+    const profileEdit  = document.getElementById('profileEdit');
+    const editBtn      = document.getElementById('editProfileBtn');
+    const saveBtn      = document.getElementById('saveProfileBtn');
+    const cancelBtn    = document.getElementById('cancelEditBtn');
+    const pName        = document.getElementById('profileName');
+    const pEmail       = document.getElementById('profileEmail');
+    const pPhone       = document.getElementById('profilePhone');
+    const pCategory    = document.getElementById('profileCategory');
+    const pPartner     = document.getElementById('profilePartner');
+    const eName        = document.getElementById('editName');
+    const eEmail       = document.getElementById('editEmail');
+    const ePhone       = document.getElementById('editPhone');
+    const eCategory    = document.getElementById('editCategory');
+    const ePartner     = document.getElementById('editPartner');
 
-    // =======================
-    // DATA STRUCTURES
-    // =======================
-    // Keep docsData in memory; could persist per user later
-    const docsData = {
-      uploaded: [],
-      review: [],
-      filed: []
+    // RENDER HEADER & SETTINGS
+    function renderHeader() {
+      greeting.textContent = `Welcome, ${me.name}`;
+      // pick just the active category (only the first one for now)
+    const displayCat = me.category.split(',')[0];
+    subtext.textContent = `You’re a ${displayCat}, part of the ${me.partner} network.`;
+
+    }
+    function renderSettingsView() {
+      pName.textContent     = me.name;
+      pEmail.textContent    = `Email: ${me.email}`;
+      pPhone.textContent    = `Phone: ${me.phone || '–'}`;
+      pCategory.textContent = `Category: ${me.category}`;
+      pPartner.textContent  = `Partner: ${me.partner}`;
+    }
+    function openSettings() {
+      renderSettingsView();
+      profileEdit.classList.add('hidden');
+      profileView.classList.remove('hidden');
+      settingsMd.classList.remove('hidden');
+      updateStats();
+      renderDocs();
+    }
+    function closeSettings() {
+      settingsMd.classList.add('hidden');
+    }
+
+    settingsBtn.onclick = openSettings;
+    closeSet.onclick   = closeSettings;
+    settingsMd.onclick = e => { if (e.target === settingsMd) closeSettings(); };
+
+    editBtn.onclick   = () => {
+      eName.value     = me.name;
+      eEmail.value    = me.email;
+      ePhone.value    = me.phone;
+      eCategory.value = me.category;
+      ePartner.value  = me.partner;
+      profileView.classList.add('hidden');
+      profileEdit.classList.remove('hidden');
+    };
+    cancelBtn.onclick = () => {
+      profileEdit.classList.add('hidden');
+      profileView.classList.remove('hidden');
+    };
+    saveBtn.onclick   = () => {
+      me.name     = eName.value.trim();
+      me.email    = eEmail.value.trim();
+      me.phone    = ePhone.value.trim();
+      me.category = eCategory.value;
+      me.partner  = ePartner.value.trim();
+      localStorage.setItem('user_' + CURRENT, JSON.stringify(me));
+      renderHeader();
+      renderSettingsView();
+      profileEdit.classList.add('hidden');
+      profileView.classList.remove('hidden');
+    };
+    logoutBtn.onclick = () => {
+      localStorage.removeItem('currentUser');
+      location.replace('taxflowsai-login.html');
     };
 
-    // =======================
-    // ELEMENT REFERENCES
-    // =======================
-    const tabs          = document.querySelectorAll('.progress-tabs span');
-    const bar           = document.querySelector('.progress-bar');
-    const docList       = document.querySelector('.doc-list');
-    const openUpBtn     = document.getElementById('openUploadBtn');
-    const uploadMd      = document.getElementById('uploadModal');
-    const closeUp       = document.getElementById('closeUploadModal');
-    const cancelUp      = document.getElementById('cancelUploadBtn');
-    const confirmUp     = document.getElementById('confirmUploadBtn');
-    const dropZone      = document.getElementById('uploadDropZone');
-    const fileIn        = document.getElementById('uploadInput');
-    const modalFileList = document.getElementById('modalFileList');
-    const settingsBtn   = document.getElementById('settingsBtn');
-    const settingsMd    = document.getElementById('settingsModal');
-    const closeSet      = document.getElementById('closeSettingsModal');
-    const logoutBtn     = document.getElementById('logoutBtn');
-    const statUp        = document.getElementById('stat-uploaded');
-    const statRev       = document.getElementById('stat-review');
-    const statFile      = document.getElementById('stat-filed');
-    const viewMd        = document.getElementById('viewModal');
-    const docIframe     = document.getElementById('docIframe');
-    const adminTbody    = document.getElementById('adminTableBody');
-
+    // DOCUMENT STATE
+    const docsData = { uploaded: [], review: [], filed: [] };
+    const tabs     = document.querySelectorAll('.progress-tabs span');
+    const bar      = document.querySelector('.progress-bar');
+    const docsTitle= document.getElementById('docsTitle');
+    const docList  = document.querySelector('.doc-list');
     let currentStatus = 'uploaded';
-    let selectedFiles = [];
 
-    // =======================
-    // HELPER: format bytes
-    // =======================
     function fmtSize(b) {
       if (b < 1024) return b + ' B';
       if (b < 1024**2) return (b/1024).toFixed(1) + ' KB';
       return (b/1024**2).toFixed(1) + ' MB';
     }
-
-    // =======================
-    // RENDER FUNCTIONS
-    // =======================
     function renderDocs() {
+      const titles = {
+        uploaded: 'Documents Uploaded',
+        review:   'Documents In Review',
+        filed:    'Documents Filed'
+      };
+      docsTitle.textContent = titles[currentStatus];
       docList.innerHTML = '';
       docsData[currentStatus].forEach(d => {
         const li = document.createElement('li');
@@ -653,169 +489,121 @@
           <div style="flex:1">
             <strong>${d.name}</strong><br>
             <small style="color:var(--muted)">${d.desc}</small>
-            ${d.tags && d.tags.length
-              ? `<div class="tag-list">
-                   ${d.tags.map(t=>`<span class="tag">${t}</span>`).join('')}
-                 </div>`
-              : ''}
-          </div>
-        `;
-        li.addEventListener('click', () => openViewer(d.url));
+            ${d.tags?.length?`
+              <div class="tag-list">
+                ${d.tags.map(t=>`<span class="tag">${t}</span>`).join('')}
+              </div>`:''}
+          </div>`;
+        li.onclick = () => window.open(d.url,'_blank');
         docList.appendChild(li);
       });
     }
-
     function updateStats() {
-      statUp.textContent = docsData.uploaded.length;
-      statRev.textContent = docsData.review.length;
-      statFile.textContent= docsData.filed.length;
+      document.getElementById('stat-uploaded').textContent = docsData.uploaded.length;
+      document.getElementById('stat-review').textContent   = docsData.review.length;
+      document.getElementById('stat-filed').textContent    = docsData.filed.length;
     }
 
-    function renderAdminTable() {
-      adminTbody.innerHTML = '';
-      // iterate all localStorage keys
-      Object.keys(localStorage).forEach(k => {
-        if (!k.startsWith('user_')) return;
-        const u = JSON.parse(localStorage.getItem(k));
-        if (u.role !== 'client') return;
-        // count their docs
-        const count = docsData.uploaded.length;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${u.name}</td>
-          <td>${u.email}</td>
-          <td>${u.role}</td>
-          <td>${u.partner}</td>
-          <td>${count}</td>
-        `;
-        adminTbody.appendChild(tr);
-      });
-    }
-
-    // =======================
-    // TABS LOGIC
-    // =======================
     tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t=>t.classList.remove('active'));
+      tab.onclick = () => {
+        tabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         currentStatus = tab.dataset.status;
-        moveBar(tab);
+        const { offsetWidth:w, offsetLeft:x } = tab;
+        bar.style.width = w + 'px';
+        bar.style.left  = x + 'px';
         renderDocs();
-      });
+      };
     });
-    function moveBar(tab) {
-      const {offsetWidth:w,offsetLeft:x} = tab;
+    // init
+    (() => {
+      const activeTab = document.querySelector('.progress-tabs span.active');
+      const { offsetWidth:w, offsetLeft:x } = activeTab;
       bar.style.width = w + 'px';
       bar.style.left  = x + 'px';
-    }
-    // init tabs
-    moveBar(document.querySelector('.progress-tabs span.active'));
-    renderDocs();
+      renderHeader();
+      renderDocs();
+    })();
 
-    // =======================
     // UPLOAD MODAL
-    // =======================
+    const openUpBtn = document.getElementById('openUploadBtn');
+    const uploadMd  = document.getElementById('uploadModal');
+    const closeUp   = document.getElementById('closeUploadModal');
+    const cancelUp  = document.getElementById('cancelUploadBtn');
+    const confirmUp = document.getElementById('confirmUploadBtn');
+    const dropZone  = document.getElementById('uploadDropZone');
+    const fileIn    = document.getElementById('uploadInput');
+    const modalList = document.getElementById('modalFileList');
+    let selectedFiles = [];
+
     function renderModalList() {
-      modalFileList.innerHTML = '';
+      modalList.innerHTML = '';
       selectedFiles.forEach((f,i) => {
         const li = document.createElement('li');
         li.innerHTML = `
           <span>${f.name}</span>
           <span class="size">${fmtSize(f.size)}</span>
-          <input type="text"
-                 class="tag-input"
-                 placeholder="Tags (comma separated)"
-                 data-index="${i}" />
-        `;
-        modalFileList.appendChild(li);
+          <input class="tag-input" data-index="${i}"
+                 placeholder="Tags (comma separated)"/>`;
+        modalList.appendChild(li);
       });
     }
+    openUpBtn.onclick = () => uploadMd.classList.remove('hidden');
+    closeUp.onclick   = () => { uploadMd.classList.add('hidden'); resetUpload(); };
+    cancelUp.onclick  = () => { uploadMd.classList.add('hidden'); resetUpload(); };
 
-    openUploadBtn.addEventListener('click', () => uploadMd.classList.remove('hidden'));
-    closeUp.addEventListener('click',      () => { uploadMd.classList.add('hidden'); resetUpload(); });
-    cancelUp.addEventListener('click',     () => { uploadMd.classList.add('hidden'); resetUpload(); });
-
-    ['dragenter','dragover'].forEach(ev =>
+    ['dragenter','dragover'].forEach(ev => {
       dropZone.addEventListener(ev, e => {
-        e.preventDefault();
-        dropZone.classList.add('dragover');
-      })
-    );
-    ['dragleave','drop'].forEach(ev =>
-      dropZone.addEventListener(ev, e => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-      })
-    );
-    dropZone.addEventListener('drop', e => {
-      selectedFiles = Array.from(e.dataTransfer.files);
-      fileIn.files = e.dataTransfer.files;
-      renderModalList();
-      confirmUp.disabled = selectedFiles.length === 0;
+        e.preventDefault(); dropZone.classList.add('dragover');
+      });
     });
-    dropZone.addEventListener('click', () => fileIn.click());
-    fileIn.addEventListener('change', () => {
+    ['dragleave','drop'].forEach(ev => {
+      dropZone.addEventListener(ev, e => {
+        e.preventDefault(); dropZone.classList.remove('dragover');
+      });
+    });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      selectedFiles = Array.from(e.dataTransfer.files);
+      fileIn.files   = e.dataTransfer.files;
+      renderModalList();
+      confirmUp.disabled = !selectedFiles.length;
+    });
+    dropZone.onclick = () => fileIn.click();
+    fileIn.onchange  = () => {
       selectedFiles = Array.from(fileIn.files);
       renderModalList();
-      confirmUp.disabled = selectedFiles.length === 0;
-    });
-
-    confirmUp.addEventListener('click', () => {
+      confirmUp.disabled = !selectedFiles.length;
+    };
+    confirmUp.onclick = () => {
       selectedFiles.forEach((file,i) => {
         const url = URL.createObjectURL(file);
-        const input = document.querySelector(`.tag-input[data-index="${i}"]`);
-        const tags = input && input.value
-          ? input.value.split(',').map(s=>s.trim()).filter(Boolean)
-          : [];
-        docsData.uploaded.push({
-          name: file.name,
-          desc: file.name,
-          url,
-          tags
-        });
+        const tagInput = modalList.querySelector(`.tag-input[data-index="${i}"]`);
+        const tags     = tagInput?.value.split(',').map(s=>s.trim()).filter(Boolean) || [];
+        docsData.uploaded.push({ name:file.name, desc:file.name, url, tags });
       });
       uploadMd.classList.add('hidden');
       resetUpload();
-      if (currentStatus === 'uploaded') renderDocs();
+      if (currentStatus==='uploaded') renderDocs();
       updateStats();
-      if (me.role === 'admin') renderAdminTable();
-    });
-
+    };
     function resetUpload() {
       selectedFiles = [];
-      fileIn.value = '';
-      modalFileList.innerHTML = '';
-      confirmUp.disabled = true;
+      fileIn.value   = '';
+      modalList.innerHTML = '';
+      confirmUp.disabled   = true;
     }
 
-    // =======================
-    // SETTINGS & LOGOUT
-    // =======================
-    settingsBtn.addEventListener('click', () => {
-      updateStats();
-      if (me.role === 'admin') renderAdminTable();
-      settingsMd.classList.remove('hidden');
-    });
-    closeSet.addEventListener('click', () => settingsMd.classList.add('hidden'));
-    settingsMd.addEventListener('click', e => {
-      if (e.target === settingsMd) settingsMd.classList.add('hidden');
-    });
-    logoutBtn.addEventListener('click', () => {
-      localStorage.removeItem('currentUser');
-      location.replace('taxflowsai-login.html');
-    });
-
-    // =======================
-    // DOCUMENT VIEWER
-    // =======================
-    function openViewer(src) {
+    // DOC VIEWER
+    const viewMd   = document.getElementById('viewModal');
+    const docIframe= document.getElementById('docIframe');
+    function openViewer(src){
       docIframe.src = src;
       viewMd.classList.remove('hidden');
     }
-    viewMd.addEventListener('click', e => {
-      if (e.target === viewMd) viewMd.classList.add('hidden');
-    });
+    viewMd.onclick = e => {
+      if(e.target===viewMd) viewMd.classList.add('hidden');
+    };
   </script>
 </body>
 </html>
