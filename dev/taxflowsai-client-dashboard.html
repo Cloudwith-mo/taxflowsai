@@ -575,18 +575,61 @@
       renderModalList();
       confirmUp.disabled = !selectedFiles.length;
     };
-    confirmUp.onclick = () => {
-      selectedFiles.forEach((file,i) => {
-        const url = URL.createObjectURL(file);
-        const tagInput = modalList.querySelector(`.tag-input[data-index="${i}"]`);
-        const tags     = tagInput?.value.split(',').map(s=>s.trim()).filter(Boolean) || [];
-        docsData.uploaded.push({ name:file.name, desc:file.name, url, tags });
+     async function fetchUploadUrl() {
+    const resp = await fetch(
+      'https://q613ysn8o3.execute-api.us-east-1.amazonaws.com/$default/GetUploadUrl',
+      {
+        method: 'POST',
+        headers: {
+          // if you’re using a JWT, include it here:
+          // 'Authorization': 'Bearer ' + localStorage.getItem('idToken')
+        }
+      }
+    );
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Could not get upload URL: ${text}`);
+    }
+    return resp.json();  // { uploadUrl, docId }
+  }
+
+  confirmUp.onclick = async () => {
+    try {
+      // 1) call your API to get a presigned URL
+      const { uploadUrl, docId } = await fetchUploadUrl();
+
+      // 2) immediately PUT the file to S3
+      const file = selectedFiles[0];
+      const putResp = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file
       });
-      uploadMd.classList.add('hidden');
-      resetUpload();
-      if (currentStatus==='uploaded') renderDocs();
+      if (!putResp.ok) {
+        throw new Error(`S3 upload failed: ${await putResp.text()}`);
+      }
+
+      // 3) update your UI / metadata list
+      docsData.uploaded.push({
+        name: file.name,
+        desc: file.name,
+        url: uploadUrl.split('?')[0],  // public URL without query params
+        tags: [],
+        docId
+      });
+      renderDocs();
       updateStats();
-    };
+      alert(`Uploaded ${file.name} successfully!`);
+
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    } finally {
+      // cleanup modal state
+      resetUpload();
+      uploadMd.classList.add('hidden');
+    }
+  };
     function resetUpload() {
       selectedFiles = [];
       fileIn.value   = '';
