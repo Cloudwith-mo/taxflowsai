@@ -404,7 +404,8 @@
     function renderHeader() {
       greeting.textContent = `Welcome, ${me.name}`;
       // pick just the active category (only the first one for now)
-    const displayCat = me.category.split(',')[0];
+// Ensure 'me.category' is defined and a string before using split
+    let categories = typeof me.category === 'string' ? me.category.split(',') : [];
     subtext.textContent = `You’re a ${displayCat}, part of the ${me.partner} network.`;
 
     }
