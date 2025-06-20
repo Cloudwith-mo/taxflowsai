@@ -151,6 +151,16 @@
     /* FORM SWITCH */
     form { display: none }
     form.active { display: block }
+
+    /* CONFIRM USER FORM */
+    #confirmForm { display: none; }
+    #confirmForm.active { display: block; }
+
+    /* FORGOT PASSWORD FORM */
+    #forgotForm { display: none; }
+    #forgotForm.active { display: block; }
+
+
   </style>
 </head>
 <body>
@@ -163,20 +173,26 @@
 
     <!-- LOGIN -->
     <form id="loginForm" class="active">
-      <h2>Login</h2>
-      <div class="input-group">
-        <i class="fas fa-envelope"></i>
-        <input type="email" id="loginEmail" placeholder="Email Address" required />
-      </div>
-      <div class="input-group">
-        <i class="fas fa-lock"></i>
-        <input type="password" id="loginPassword" placeholder="Password" required />
-      </div>
-      <button type="submit" class="btn btn-primary">Log in</button>
-      <div class="switch-link">
-        Don't have an account? <span id="showRegister">Sign up</span>
-      </div>
-    </form>
+  <h2>Login</h2>
+  <div class="input-group">
+    <i class="fas fa-envelope"></i>
+    <input type="email" id="loginEmail" placeholder="Email Address" required />
+  </div>
+  <div class="input-group">
+    <i class="fas fa-lock"></i>
+    <input type="password" id="loginPassword" placeholder="Password" required />
+  </div>
+  <button type="submit" class="btn btn-primary">Log in</button>
+
+  <div class="switch-link">
+    Don't have an account? <span id="showRegister">Sign up</span>
+  </div>
+
+  <div class="switch-link" style="margin-top:0.5rem;">
+    Forgot your password? <span id="showForgotPassword" style="cursor:pointer;color:#2979ff;">Reset it here</span>
+  </div>
+</form>
+
 
     <!-- CHOOSE CATEGORY (if multiple) -->
     <form id="chooseCatForm">
@@ -234,23 +250,126 @@
         Already have an account? <span id="showLogin">Log in</span>
       </div>
     </form>
+
+    <!-- FORGOT PASSWORD FORM -->
+<form id="forgotForm">
+  <h2>Forgot Password?</h2>
+  <p style="margin-bottom:1rem;color:#8f98a5;">Enter your email address below to receive a password reset code.</p>
+  <div class="input-group">
+    <i class="fas fa-envelope"></i>
+    <input type="email" id="forgotEmail" placeholder="Email Address" required />
+  </div>
+  <button type="submit" class="btn btn-primary">Send Reset Code</button>
+
+  <div class="switch-link">
+    Remembered your password? <span id="backToLogin" style="cursor:pointer;color:#2979ff;">Log in</span>
+  </div>
+</form>
+
+<!-- RESET PASSWORD CONFIRMATION FORM -->
+<form id="resetConfirmForm">
+  <h2>Reset Your Password</h2>
+  <p style="margin-bottom:1rem;color:#8f98a5;">
+    Enter the verification code sent to your email and your new password.
+  </p>
+  <div class="input-group">
+    <i class="fas fa-envelope"></i>
+    <input type="email" id="resetConfirmEmail" placeholder="Email Address" required />
+  </div>
+  <div class="input-group">
+    <i class="fas fa-key"></i>
+    <input type="text" id="resetConfirmCode" placeholder="Verification Code" required />
+  </div>
+  <div class="input-group">
+    <i class="fas fa-lock"></i>
+    <input type="password" id="newPassword" placeholder="New Password" required />
+  </div>
+  <div class="input-group">
+    <i class="fas fa-lock"></i>
+    <input type="password" id="confirmNewPassword" placeholder="Confirm New Password" required />
+  </div>
+  <button type="submit" class="btn btn-primary">Reset Password</button>
+
+  <div class="switch-link">
+    Remember your password? <span id="backToLoginFromReset" style="cursor:pointer;color:#2979ff;">Log in</span>
+  </div>
+</form>
+
+
+
+        <!-- CONFIRM USER FORM -->
+   <form id="confirmForm">
+  <h2>Confirm Your Account</h2>
+  <p style="margin-bottom:1rem; color:#8f98a5;">
+    Enter the <strong>Verification Code</strong> you received via email below. <br />
+    <strong>This is not your password.</strong>
+  </p>
+  <div class="input-group">
+    <i class="fas fa-envelope"></i>
+    <input type="email" id="confirmEmail" placeholder="Email Address" required />
+  </div>
+  <div class="input-group">
+    <i class="fas fa-key"></i>
+    <input type="text" id="confirmCode" placeholder="Verification Code" required />
+  </div>
+  <button type="submit" class="btn btn-primary">Confirm Account</button>
+
+  <div class="switch-link">
+    Already confirmed? <span id="goLoginFromConfirm">Log in</span>
+  </div>
+
+  <div class="switch-link">
+    Didn't receive your verification code?
+    <span id="resendVerification" style="cursor:pointer;color:#2979ff;">Resend Verification Code</span>
+  </div>
+</form>
+
+
   </div>
 
   <script>
-    // --- form toggles ---
-    const loginForm     = document.getElementById('loginForm');
-    const chooseCatForm = document.getElementById('chooseCatForm');
-    const registerForm  = document.getElementById('registerForm');
-    document.getElementById('showRegister').onclick = () => {
-      loginForm.classList.remove('active');
-      registerForm.classList.add('active');
-      chooseCatForm.classList.remove('active');
-    };
-    document.getElementById('showLogin').onclick = () => {
-      registerForm.classList.remove('active');
-      loginForm.classList.add('active');
-      chooseCatForm.classList.remove('active');
-    };
+    // --- form toggles (updated with confirm form logic) ---
+const loginForm     = document.getElementById('loginForm');
+const chooseCatForm = document.getElementById('chooseCatForm');
+const registerForm  = document.getElementById('registerForm');
+const confirmForm   = document.getElementById('confirmForm');
+const forgotForm    = document.getElementById('forgotForm');
+
+document.getElementById('showRegister').onclick = () => {
+  loginForm.classList.remove('active');
+  registerForm.classList.add('active');
+  chooseCatForm.classList.remove('active');
+  confirmForm.classList.remove('active');
+  forgotForm.classList.remove('active');
+};
+
+document.getElementById('showLogin').onclick = () => {
+  registerForm.classList.remove('active');
+  loginForm.classList.add('active');
+  chooseCatForm.classList.remove('active');
+  confirmForm.classList.remove('active');
+  forgotForm.classList.remove('active');
+};
+
+document.getElementById('goLoginFromConfirm').onclick = () => {
+  confirmForm.classList.remove('active');
+  loginForm.classList.add('active');
+  forgotForm.classList.remove('active');
+};
+
+// Forgot Password toggle handlers explicitly
+document.getElementById('showForgotPassword').onclick = () => {
+  loginForm.classList.remove('active');
+  registerForm.classList.remove('active');
+  confirmForm.classList.remove('active');
+  forgotForm.classList.add('active');
+};
+
+document.getElementById('backToLogin').onclick = () => {
+  forgotForm.classList.remove('active');
+  loginForm.classList.add('active');
+};
+
 
     // show/hide category checks for new client
     const roleClient    = document.getElementById('roleClient');
@@ -268,93 +387,6 @@
     const CURRENT_USER    = 'currentUser';
     const CURRENT_CATEGORY= 'currentCategory';
 
-    // --- register ---
-    registerForm.onsubmit = e => {
-      e.preventDefault();
-      const name    = document.getElementById('regName').value.trim();
-      const email   = document.getElementById('regEmail').value.trim();
-      const partner = document.getElementById('regPartner').value;
-      const role    = document.querySelector('input[name="role"]:checked').value;
-      const pass1   = document.getElementById('regPass').value;
-      const pass2   = document.getElementById('regPass2').value;
-      if (pass1 !== pass2) return alert("Passwords don't match");
-
-      let categories = [];
-      if (role === 'client') {
-        categories = Array.from(
-          document.querySelectorAll('input[name="regCategory"]:checked')
-        ).map(cb => cb.value);
-        if (!categories.length) {
-          return alert('Please select at least one category');
-        }
-      }
-
-      const key = USERS_PREFIX + email;
-      if (localStorage.getItem(key)) {
-        return alert('Email already registered');
-      }
-      localStorage.setItem(key, JSON.stringify({
-        name, email, partner,
-        role,
-        category: role === 'client' ? categories : [],
-        password: pass1
-      }));
-      alert(`Registered ${role}: ${name}`);
-      registerForm.classList.remove('active');
-      loginForm.classList.add('active');
-    };
-
-    // --- login ---
-    loginForm.onsubmit = e => {
-      e.preventDefault();
-      const email = document.getElementById('loginEmail').value.trim();
-      const pass  = document.getElementById('loginPassword').value;
-      const key   = USERS_PREFIX + email;
-      const stored = localStorage.getItem(key);
-      if (!stored) return alert('No account found');
-      const user = JSON.parse(stored);
-      if (user.password !== pass) return alert('Invalid password');
-
-      // save user
-      localStorage.setItem(CURRENT_USER, email);
-
-      // if client with multiple categories → show UI chooser
-      if (user.role === 'client' && Array.isArray(user.category) && user.category.length > 1) {
-        // populate chooser
-        const opts = document.getElementById('chooseCatOptions');
-        opts.innerHTML = '';
-        user.category.forEach((cat, i) => {
-          const id = `cat_${i}`;
-          opts.innerHTML += `
-            <label for="${id}">
-              <input 
-                type="radio" name="chosenCat" 
-                id="${id}" value="${cat}" 
-                ${i===0?'checked':''} 
-              /> ${cat}
-            </label><br/>
-          `;
-        });
-        // switch forms
-        loginForm.classList.remove('active');
-        chooseCatForm.classList.add('active');
-        return;
-      }
-
-      // else single‐category or admin → set and redirect
-      if (user.role === 'client') {
-        const only = user.category[0] || '';
-        localStorage.setItem(CURRENT_CATEGORY, only);
-      }
-
-      // redirect
-      if (user.role === 'admin') {
-        window.location.href = 'taxflowsai-admin-dashboard.html';
-      } else {
-        window.location.href = 'taxflowsai-client-dashboard.html';
-      }
-    };
-
     // --- handle category choice ---
     chooseCatForm.onsubmit = e => {
       e.preventDefault();
@@ -364,5 +396,230 @@
       window.location.href = 'taxflowsai-client-dashboard.html';
     };
   </script>
+
+  <!-- AWS Cognito SDK -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1622.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6/dist/amazon-cognito-identity.min.js"></script>
+
+<script>
+// --- Cognito User Pool configuration ---
+const poolData = {
+  UserPoolId: 'us-east-1_WSlbBY4sQ',           // your provided user pool ID
+  ClientId: '7vkumiq86lap5de5195f6llkaa'       // your provided app client ID
+};
+
+const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+
+registerForm.onsubmit = e => {
+  e.preventDefault();
+
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim().toLowerCase();
+  const password = document.getElementById('regPass').value;
+  const password2 = document.getElementById('regPass2').value;
+  const partner = document.getElementById('regPartner').value;
+  const role = document.querySelector('input[name="role"]:checked').value;
+
+  // Password matching validation explicitly
+  if(password !== password2){
+    return alert("Passwords don't match");
+  }
+
+  // Password strength validation explicitly
+  if(
+    password.length < 8 || 
+    !/[A-Z]/.test(password) || 
+    !/[a-z]/.test(password) || 
+    !/\d/.test(password)
+  ){
+    return alert("Password must be at least 8 characters and include uppercase letters, lowercase letters, and numbers.");
+  }
+
+  const categories = Array.from(
+    document.querySelectorAll('input[name="regCategory"]:checked')
+  ).map(cb => cb.value);
+
+  if(role === 'client' && categories.length === 0) {
+    return alert('Please select at least one category.');
+  }
+
+  const attributes = [
+    new AmazonCognitoIdentity.CognitoUserAttribute({ Name: 'name', Value: name }),
+    new AmazonCognitoIdentity.CognitoUserAttribute({ Name: 'email', Value: email }),
+    new AmazonCognitoIdentity.CognitoUserAttribute({ Name: 'custom:partner', Value: partner }),
+    new AmazonCognitoIdentity.CognitoUserAttribute({ Name: 'custom:role', Value: role }),
+    new AmazonCognitoIdentity.CognitoUserAttribute({ Name: 'custom:category', Value: categories.join(',') }),
+  ];
+
+  userPool.signUp(email, password, attributes, null, (err, result) => {
+    if (err) {
+      console.error(err);
+      alert('Registration error: ' + err.message);
+      return;
+    }
+    alert('Registration successful! Check your email for verification.');
+    registerForm.reset();
+    registerForm.classList.remove('active');
+    confirmForm.classList.add('active');
+    document.getElementById('confirmEmail').value = email;
+  });
+};
+
+
+// --- Login User ---
+loginForm.onsubmit = e => {
+  e.preventDefault();
+
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const password = document.getElementById('loginPassword').value;
+
+  const authDetails = new AmazonCognitoIdentity.AuthenticationDetails({
+    Username: email,
+    Password: password
+  });
+
+  const cognitoUser = new AmazonCognitoIdentity.CognitoUser({
+    Username: email,
+    Pool: userPool
+  });
+
+  cognitoUser.authenticateUser(authDetails, {
+    onSuccess: session => {
+      console.log('Login successful:', session);
+      alert('Logged in successfully!');
+
+      cognitoUser.getUserAttributes((err, attributes) => {
+        if(err) {
+          console.error(err);
+          alert('Error fetching user attributes');
+          return;
+        }
+
+        const userAttr = {};
+        attributes.forEach(attr => userAttr[attr.Name] = attr.Value);
+        
+        localStorage.setItem('currentUser', JSON.stringify(userAttr));
+        
+        if(userAttr['custom:role'] === 'admin') {
+          window.location.href = 'taxflowsai-admin-dashboard.html';
+        } else {
+          const userCategories = userAttr['custom:category'].split(',');
+          localStorage.setItem('currentCategory', userCategories[0] || '');
+          window.location.href = 'taxflowsai-client-dashboard.html';
+        }
+      });
+    },
+    onFailure: err => {
+      console.error(err);
+      alert('Login failed: ' + err.message);
+    }
+  });
+};
+
+// --- Confirm Cognito User Logic ---
+confirmForm.onsubmit = e => {
+  e.preventDefault();
+
+  const email = document.getElementById('confirmEmail').value.trim().toLowerCase();
+  const code = document.getElementById('confirmCode').value.trim();
+
+  const cognitoUser = new AmazonCognitoIdentity.CognitoUser({
+    Username: email,
+    Pool: userPool
+  });
+
+  cognitoUser.confirmRegistration(code, true, (err, result) => {
+    if (err) {
+      console.error(err);
+      alert('Confirmation error: ' + err.message);
+      return;
+    }
+    alert('Confirmation successful! You can now log in.');
+    confirmForm.classList.remove('active');
+    loginForm.classList.add('active');
+  });
+};
+
+// Resend verification code logic
+document.getElementById('resendVerification').onclick = () => {
+  const email = document.getElementById('confirmEmail').value.trim().toLowerCase();
+
+  const cognitoUser = new AmazonCognitoIdentity.CognitoUser({
+    Username: email,
+    Pool: userPool
+  });
+
+  cognitoUser.resendConfirmationCode((err, result) => {
+    if (err) {
+      console.error(err);
+      alert('Error resending verification code: ' + err.message);
+      return;
+    }
+    alert('Verification code resent successfully! Check your email inbox.');
+  });
+};
+
+const resetConfirmForm = document.getElementById('resetConfirmForm');
+
+// Explicit toggle from forgot password form to reset confirmation form
+forgotForm.onsubmit = e => {
+  e.preventDefault();
+
+  const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
+  const cognitoUser = new AmazonCognitoIdentity.CognitoUser({
+    Username: email,
+    Pool: userPool
+  });
+
+  cognitoUser.forgotPassword({
+    onSuccess: data => {
+      alert('Password reset code sent! Check your email.');
+      forgotForm.classList.remove('active');
+      resetConfirmForm.classList.add('active');
+      document.getElementById('resetConfirmEmail').value = email; // pre-fill explicitly
+    },
+    onFailure: err => alert('Error: ' + err.message)
+  });
+};
+
+// Explicitly handle reset password confirmation submission with password matching validation
+resetConfirmForm.onsubmit = e => {
+  e.preventDefault();
+
+  const email = document.getElementById('resetConfirmEmail').value.trim().toLowerCase();
+  const code = document.getElementById('resetConfirmCode').value.trim();
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+  // Explicitly check if passwords match
+  if(newPassword !== confirmNewPassword) {
+    return alert("Passwords don't match! Please try again.");
+  }
+
+  const cognitoUser = new AmazonCognitoIdentity.CognitoUser({
+    Username: email,
+    Pool: userPool
+  });
+
+  cognitoUser.confirmPassword(code, newPassword, {
+    onSuccess: () => {
+      alert('Password reset successful! You can now log in.');
+      resetConfirmForm.classList.remove('active');
+      loginForm.classList.add('active');
+    },
+    onFailure: err => alert('Error resetting password: ' + err.message)
+  });
+};
+
+
+// Explicit back to login from reset confirm form
+document.getElementById('backToLoginFromReset').onclick = () => {
+  resetConfirmForm.classList.remove('active');
+  loginForm.classList.add('active');
+};
+
+
+</script>
+
 </body>
 </html>
