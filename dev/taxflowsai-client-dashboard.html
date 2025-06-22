@@ -289,7 +289,8 @@
       <div class="modal-body">
         <div id="uploadDropZone" class="drop-zone">
   <p>Drag &amp; drop files here, or click to choose</p>
-  <input type="file" id="fileInput" hidden />
+  <input type="file" id="fileInput" multiple />
+
 </div>
 
         <ul id="modalFileList" class="modal-file-list"></ul>
@@ -496,7 +497,8 @@
                 ${d.tags.map(t=>`<span class="tag">${t}</span>`).join('')}
               </div>`:''}
           </div>`;
-        li.onclick = () => window.open(d.url,'_blank');
+          li.onclick = () => openViewer(d.url);
+
         docList.appendChild(li);
       });
     }
@@ -644,44 +646,20 @@ async function fetchUploadUrl(filename, account, contentType) {
 
 // 2) wire up the upload button once
 confirmUp.onclick = async () => {
-  try {
-    const file    = selectedFiles[0];
-    const account = 'Individual';  
-
-    // 1) pass file.type in:
-    const { uploadUrl, docId, contentType } =
+  const account = 'Individual';
+  const uploads = selectedFiles.map(async file => {   
+    const { uploadUrl, downloadUrl, docId } =
       await fetchUploadUrl(file.name, account, file.type);
-
-    // 2) PUT with the matching Content-Type header:
-    const putResp = await fetch(uploadUrl, {
-      method:  "PUT",
-      headers: { "Content-Type": contentType },
-      body:    file        // just the File object
-    });
-    if (!putResp.ok) {
-      throw new Error(`S3 upload failed: ${await putResp.text()}`);
-    }
-
-    // 3) update your UI as before…
-    docsData.uploaded.push({
-      name: file.name,
-      desc: file.name,
-      url:  uploadUrl.split('?')[0],
-      tags: [],
-      docId
-    });
-    renderDocs();
-    updateStats();
-    alert(`Uploaded ${file.name} successfully!`);
-
-  } catch (err) {
-    console.error(err);
-    alert(err.message);
-  } finally {
-    resetUpload();
-    uploadMd.classList.add('hidden');
-  }
+    await fetch(uploadUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
+    docsData.uploaded.push({ name: file.name, desc: file.name, url: downloadUrl, tags: [], docId });
+  });
+  await Promise.all(uploads);
+  renderDocs();
+  updateStats();
+  resetUpload();
+  uploadMd.classList.add('hidden');
 };
+
 
 
 
