@@ -19,7 +19,7 @@
     }
     * { box-sizing:border-box; margin:0; padding:0 }
     body { background:var(--bg); color:var(--text); font-family:"Segoe UI",sans-serif }
-    .hidden { display:none }
+    .hidden { display: none; }
     .container { max-width:1200px; margin:auto; padding:2rem 1rem }
 
     /* HEADER */
@@ -288,9 +288,10 @@
       </div>
       <div class="modal-body">
         <div id="uploadDropZone" class="drop-zone">
-          <p>Drag &amp; drop files here, or click to choose</p>
-          <input type="file" id="uploadInput" multiple hidden/>
-        </div>
+  <p>Drag &amp; drop files here, or click to choose</p>
+  <input type="file" id="fileInput" hidden />
+</div>
+
         <ul id="modalFileList" class="modal-file-list"></ul>
       </div>
       <div class="modal-actions">
@@ -299,6 +300,7 @@
       </div>
     </div>
   </div>
+
 
   <!-- SETTINGS MODAL -->
   <div id="settingsModal" class="modal-overlay hidden">
@@ -401,14 +403,13 @@
     const ePartner     = document.getElementById('editPartner');
 
     // RENDER HEADER & SETTINGS
-    function renderHeader() {
-      greeting.textContent = `Welcome, ${me.name}`;
-      // pick just the active category (only the first one for now)
-// Ensure 'me.category' is defined and a string before using split
-    let categories = typeof me.category === 'string' ? me.category.split(',') : [];
-    subtext.textContent = `You’re a ${displayCat}, part of the ${me.partner} network.`;
-
-    }
+  function renderHeader() {
+  greeting.textContent = `Welcome, ${me.name}`;
+  let categories = typeof me.category === 'string' ? me.category.split(',') : [];
+  let displayCat = categories[0] || 'Individual';
+  subtext.textContent = `You’re a ${displayCat}, part of the ${me.partner} network.`;
+}
+    
     function renderSettingsView() {
       pName.textContent     = me.name;
       pEmail.textContent    = `Email: ${me.email}`;
@@ -527,28 +528,52 @@
     })();
 
     // UPLOAD MODAL
+    
     const openUpBtn = document.getElementById('openUploadBtn');
     const uploadMd  = document.getElementById('uploadModal');
     const closeUp   = document.getElementById('closeUploadModal');
     const cancelUp  = document.getElementById('cancelUploadBtn');
     const confirmUp = document.getElementById('confirmUploadBtn');
     const dropZone  = document.getElementById('uploadDropZone');
-    const fileIn    = document.getElementById('uploadInput');
+    const fileIn    = document.getElementById('fileInput');
     const modalList = document.getElementById('modalFileList');
     let selectedFiles = [];
 
     function renderModalList() {
-      modalList.innerHTML = '';
-      selectedFiles.forEach((f,i) => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <span>${f.name}</span>
-          <span class="size">${fmtSize(f.size)}</span>
-          <input class="tag-input" data-index="${i}"
-                 placeholder="Tags (comma separated)"/>`;
-        modalList.appendChild(li);
-      });
-    }
+  modalList.innerHTML = '';
+  selectedFiles.forEach((file, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <!-- allow the user to override the filename -->
+      <input
+        type="text"
+        class="filename-input"
+        data-index="${i}"
+        value="${file.name}"
+        placeholder="Enter display name"
+        style="width:100%;margin-bottom:.5rem;padding:.5rem;border-radius:4px;
+               border:1px solid #555;background:#1e2a44;color:#e5e7eb;"
+      />
+
+      <!-- show the actual file name & size -->
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span>${file.name}</span>
+        <span class="size">${fmtSize(file.size)}</span>
+      </div>
+
+      <!-- tags -->
+      <input
+        class="tag-input"
+        data-index="${i}"
+        placeholder="Tags (comma separated)"
+        style="width:100%;margin-top:.5rem;padding:.5rem;border-radius:4px;
+               border:1px solid #555;background:#1e2a44;color:#e5e7eb;"
+      />
+    `;
+    modalList.appendChild(li);
+  });
+}
+
     openUpBtn.onclick = () => uploadMd.classList.remove('hidden');
     closeUp.onclick   = () => { uploadMd.classList.add('hidden'); resetUpload(); };
     cancelUp.onclick  = () => { uploadMd.classList.add('hidden'); resetUpload(); };
@@ -576,61 +601,8 @@
       renderModalList();
       confirmUp.disabled = !selectedFiles.length;
     };
-     async function fetchUploadUrl() {
-    const resp = await fetch(
-      'https://q613ysn8o3.execute-api.us-east-1.amazonaws.com/$default/GetUploadUrl',
-      {
-        method: 'POST',
-        headers: {
-          // if you’re using a JWT, include it here:
-          // 'Authorization': 'Bearer ' + localStorage.getItem('idToken')
-        }
-      }
-    );
-    if (!resp.ok) {
-      const text = await resp.text();
-      throw new Error(`Could not get upload URL: ${text}`);
-    }
-    return resp.json();  // { uploadUrl, docId }
-  }
 
-  confirmUp.onclick = async () => {
-    try {
-      // 1) call your API to get a presigned URL
-      const { uploadUrl, docId } = await fetchUploadUrl();
 
-      // 2) immediately PUT the file to S3
-      const file = selectedFiles[0];
-      const putResp = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file
-      });
-      if (!putResp.ok) {
-        throw new Error(`S3 upload failed: ${await putResp.text()}`);
-      }
-
-      // 3) update your UI / metadata list
-      docsData.uploaded.push({
-        name: file.name,
-        desc: file.name,
-        url: uploadUrl.split('?')[0],  // public URL without query params
-        tags: [],
-        docId
-      });
-      renderDocs();
-      updateStats();
-      alert(`Uploaded ${file.name} successfully!`);
-
-    } catch (err) {
-      console.error(err);
-      alert(err.message);
-    } finally {
-      // cleanup modal state
-      resetUpload();
-      uploadMd.classList.add('hidden');
-    }
-  };
     function resetUpload() {
       selectedFiles = [];
       fileIn.value   = '';
@@ -648,6 +620,76 @@
     viewMd.onclick = e => {
       if(e.target===viewMd) viewMd.classList.add('hidden');
     };
-  </script>
+
+    // 1) fetch a presigned URL (passing filename, account, user)
+async function fetchUploadUrl(filename, account, contentType) {
+  const resp = await fetch(
+    'https://q613ysn8o3.execute-api.us-east-1.amazonaws.com/GetUploadUrl',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename,
+        account,
+        user: localStorage.getItem('currentUser'),
+        contentType        // ← use the parameter, not `file`!
+      })
+    }
+  );
+  if (!resp.ok) {
+    throw new Error(`Could not get upload URL: ${await resp.text()}`);
+  }
+  return resp.json();  // returns { uploadUrl, docId, contentType }
+}
+
+// 2) wire up the upload button once
+confirmUp.onclick = async () => {
+  try {
+    const file    = selectedFiles[0];
+    const account = 'Individual';  
+
+    // 1) pass file.type in:
+    const { uploadUrl, docId, contentType } =
+      await fetchUploadUrl(file.name, account, file.type);
+
+    // 2) PUT with the matching Content-Type header:
+    const putResp = await fetch(uploadUrl, {
+      method:  "PUT",
+      headers: { "Content-Type": contentType },
+      body:    file        // just the File object
+    });
+    if (!putResp.ok) {
+      throw new Error(`S3 upload failed: ${await putResp.text()}`);
+    }
+
+    // 3) update your UI as before…
+    docsData.uploaded.push({
+      name: file.name,
+      desc: file.name,
+      url:  uploadUrl.split('?')[0],
+      tags: [],
+      docId
+    });
+    renderDocs();
+    updateStats();
+    alert(`Uploaded ${file.name} successfully!`);
+
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  } finally {
+    resetUpload();
+    uploadMd.classList.add('hidden');
+  }
+};
+
+
+
+
+
+
+
+</script>
 </body>
 </html>
+
