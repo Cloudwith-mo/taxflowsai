@@ -6,6 +6,7 @@ import json
 import boto3
 from datetime import datetime
 
+# — clients
 s3     = boto3.client('s3')
 dynamo = boto3.client('dynamodb')
 
@@ -24,15 +25,15 @@ def lambda_handler(event, context):
     contentType = payload.get("contentType", "application/octet-stream")
 
     # ——————————————
-    # 2) Generate docId
+    # 2) Generate a unique docId
     # ——————————————
     doc_id = str(uuid.uuid4())
 
     # ——————————————
-    # 3) Generate presigned PUT URL *with* ContentType
+    # 3a) Presigned PUT URL (for upload)
     # ——————————————
     bucket = os.environ["BUCKET_NAME"]
-    url = s3.generate_presigned_url(
+    put_url = s3.generate_presigned_url(
         ClientMethod="put_object",
         Params={
             "Bucket":      bucket,
@@ -43,7 +44,19 @@ def lambda_handler(event, context):
     )
 
     # ——————————————
-    # 4) Write metadata row to DynamoDB
+    # 3b) Presigned GET URL (for download/view)
+    # ——————————————
+    get_url = s3.generate_presigned_url(
+        ClientMethod="get_object",
+        Params={
+            "Bucket": bucket,
+            "Key":    doc_id
+        },
+        ExpiresIn=3600
+    )
+
+    # ——————————————
+    # 4) Write metadata to DynamoDB
     # ——————————————
     ts = datetime.utcnow().isoformat()
     dynamo.put_item(
@@ -59,7 +72,7 @@ def lambda_handler(event, context):
     )
 
     # ——————————————
-    # 5) Return JSON + CORS headers
+    # 5) Return both URLs + CORS headers
     # ——————————————
     return {
         "statusCode": 200,
@@ -70,7 +83,8 @@ def lambda_handler(event, context):
             "Access-Control-Allow-Headers": "Content-Type,Authorization"
         },
         "body": json.dumps({
-            "uploadUrl":   url,
+            "uploadUrl":   put_url,
+            "downloadUrl": get_url,
             "docId":       doc_id,
             "filename":    filename,
             "contentType": contentType
