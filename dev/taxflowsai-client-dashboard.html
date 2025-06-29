@@ -77,6 +77,13 @@
     }
     .card h3 { font-size:1.1rem; margin-bottom:1rem }
 
+    .card ul.doc-list {
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+
     /* DOC LIST */
     .doc-list { list-style:none; padding:0; margin:0 }
     .doc-list li {
@@ -492,14 +499,14 @@ me.category = picked || me['custom:category']?.split(',')[0] || 'Individual';
         li.innerHTML = `
           <i class="fas fa-file-alt"></i>
           <div style="flex:1">
-            <strong>${d.name}</strong><br>
-            <small style="color:var(--muted)">${d.desc}</small>
+            <strong>${d.filename || 'Unnamed'}</strong><br>
+            <small style="color:var(--muted)">${new Date(d.timestamp).toLocaleString()}</small>
             ${d.tags?.length?`
               <div class="tag-list">
                 ${d.tags.map(t=>`<span class="tag">${t}</span>`).join('')}
               </div>`:''}
           </div>`;
-          li.onclick = () => openViewer(d.url);
+          li.onclick = () => openViewer(d.downloadUrl);
 
         docList.appendChild(li);
       });
@@ -635,13 +642,15 @@ fetchDocs(me.category)
     // DOC VIEWER
     const viewMd   = document.getElementById('viewModal');
     const docIframe= document.getElementById('docIframe');
-    function openViewer(src){
-      docIframe.src = src;
-      viewMd.classList.remove('hidden');
-    }
-    viewMd.onclick = e => {
-      if(e.target===viewMd) viewMd.classList.add('hidden');
-    };
+    function openViewer(src) {
+  const isPDF = src.toLowerCase().endsWith('.pdf');
+  if (!isPDF) {
+    window.open(src, '_blank'); // open in new tab
+    return;
+  }
+  docIframe.src = src;
+  viewMd.classList.remove('hidden');
+}
 
 // 1) fetch a presigned URL (passing filename, account, user, partner, category, username)
 async function fetchUploadUrl(filename, account, contentType, tags = []) {
