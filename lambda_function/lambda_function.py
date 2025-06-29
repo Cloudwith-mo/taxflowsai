@@ -1,63 +1,59 @@
-# lambda_function.py
-
 import os
 import uuid
 import json
 import boto3
 from datetime import datetime
 
-# — clients
+# clients
 s3     = boto3.client('s3')
 dynamo = boto3.client('dynamodb')
 
 def lambda_handler(event, context):
-    # ——————————————
-    # 1) Parse JSON payload (including contentType)
-    # ——————————————
-    try:
-        payload = json.loads(event.get("body") or "{}")
-    except json.JSONDecodeError:
-        payload = {}
+    # 1) parse payload
+    payload = json.loads(event.get("body", "{}"))
 
-    filename    = payload.get("filename") or str(uuid.uuid4())
+    filename    = payload.get("filename", str(uuid.uuid4()))
     account     = payload.get("account", "Individual")
-    user        = payload.get("user", "anonymous@example.com")
+    user        = payload.get("user", "anonymous")
     contentType = payload.get("contentType", "application/octet-stream")
 
-    # ——————————————
-    # 2) Generate a unique docId
-    # ——————————————
-    doc_id = str(uuid.uuid4())
+    # 2) build a safe folder prefix out of partner/category/username
+    raw_parts = [
+        payload.get("partner", ""), 
+        payload.get("category", ""), 
+        payload.get("username", "")
+    ]
+    parts = [p.replace("/", "_").strip() for p in raw_parts if p.strip()]
+    folder_prefix = "/".join(parts)
 
-    # ——————————————
-    # 3a) Presigned PUT URL (for upload)
-    # ——————————————
+    # 3) generate a unique key (with or without prefix)
+    doc_id = str(uuid.uuid4())
+    key = f"{folder_prefix}/{doc_id}" if folder_prefix else doc_id
+
     bucket = os.environ["BUCKET_NAME"]
+
+    # 4) presigned PUT URL
     put_url = s3.generate_presigned_url(
         ClientMethod="put_object",
         Params={
             "Bucket":      bucket,
-            "Key":         doc_id,
+            "Key":         key,
             "ContentType": contentType
         },
         ExpiresIn=3600
     )
 
-    # ——————————————
-    # 3b) Presigned GET URL (for download/view)
-    # ——————————————
+    # 5) presigned GET URL
     get_url = s3.generate_presigned_url(
         ClientMethod="get_object",
         Params={
             "Bucket": bucket,
-            "Key":    doc_id
+            "Key":    key
         },
         ExpiresIn=3600
     )
 
-    # ——————————————
-    # 4) Write metadata to DynamoDB
-    # ——————————————
+    # 6) write metadata to DynamoDB, **including** partner & category
     ts = datetime.utcnow().isoformat()
     dynamo.put_item(
         TableName=os.environ["METADATA_TABLE"],
@@ -66,14 +62,15 @@ def lambda_handler(event, context):
             "docId":     {"S": doc_id},
             "filename":  {"S": filename},
             "account":   {"S": account},
+            "partner":   {"S": payload.get("partner", "")},
+            "category":  {"S": payload.get("category", "")},
             "status":    {"S": "uploaded"},
-            "timestamp": {"S": ts}
+            "timestamp": {"S": ts},
+            "s3Key":     {"S": key}
         }
     )
 
-    # ——————————————
-    # 5) Return both URLs + CORS headers
-    # ——————————————
+    # 7) return URLs and IDs
     return {
         "statusCode": 200,
         "headers": {

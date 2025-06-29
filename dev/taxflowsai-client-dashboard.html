@@ -372,13 +372,26 @@
   </div>
 
   <script>
+// ✅ now points at the correct stage
+const API_BASE = 'https://q613ysn8o3.execute-api.us-east-1.amazonaws.com';
+
+
     // AUTH GUARD & PROFILE
-    const CURRENT = localStorage.getItem('currentUser');
-    if (!CURRENT) location.replace('taxflowsai-login.html');
-    const me = JSON.parse(localStorage.getItem('user_' + CURRENT)) || {};
-    me.phone    = me.phone    || '';
-    me.category = me.category || 'Individual';
-    me.partner  = me.partner  || '';
+const raw = localStorage.getItem('currentUser');
+if (!raw) {
+  location.replace('taxflowsai-login.html');
+}
+const me = JSON.parse(raw);
+
+// Cognito stores your “partner” and “role” in custom:… attributes:
+me.phone   = me.phone || '';
+me.partner = me['custom:partner'] || '';
+
+// **Use the single category you saved at login** (fallback to the first in the list or “Individual”):
+const picked = localStorage.getItem('currentCategory');
+me.category = picked || me['custom:category']?.split(',')[0] || 'Individual';
+
+
 
     // ELEMENTS
     const greeting     = document.querySelector('.greeting');
@@ -520,13 +533,34 @@
       };
     });
     // init
-    (() => {
+   (async () => {
       const activeTab = document.querySelector('.progress-tabs span.active');
       const { offsetWidth:w, offsetLeft:x } = activeTab;
       bar.style.width = w + 'px';
       bar.style.left  = x + 'px';
       renderHeader();
-      renderDocs();
+
+// load and bucket the real documents into your three lists
+const allDocs = await fetchDocs(me.category)
+console.log('fetchDocs →', allDocs, typeof allDocs)
+
+fetchDocs(me.category)
+  .then(list => {
+    docsData.uploaded = list.filter(d => d.status === 'uploaded');
+    docsData.review   = list.filter(d => d.status === 'review');
+    docsData.filed    = list.filter(d => d.status === 'filed');
+    updateStats();
+    renderDocs();
+  })
+.catch(err => {
+    console.error('could not load docs', err);
+    // You might want to handle the error gracefully here,
+    // perhaps by setting the data to an empty array or displaying an error message.
+    // For example:
+    // this.docs = [];
+  });
+
+
     })();
 
     // UPLOAD MODAL
@@ -623,46 +657,105 @@
       if(e.target===viewMd) viewMd.classList.add('hidden');
     };
 
-    // 1) fetch a presigned URL (passing filename, account, user)
+// 1) fetch a presigned URL (passing filename, account, user, partner, category, username)
 async function fetchUploadUrl(filename, account, contentType) {
+  const payload = {
+    filename,
+    account,
+    user: me.email,
+    contentType,
+    partner:  me.partner,   // e.g. "Acme Tax Office"
+    category: me.category,  // e.g. "Individual"
+    username: me.name       // e.g. "Jane Doe"
+  };
+
   const resp = await fetch(
-    'https://q613ysn8o3.execute-api.us-east-1.amazonaws.com/GetUploadUrl',
+    `${API_BASE}/GetUploadUrl`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        filename,
-        account,
-        user: localStorage.getItem('currentUser'),
-        contentType        // ← use the parameter, not `file`!
-      })
+      body: JSON.stringify(payload)
     }
   );
+
   if (!resp.ok) {
     throw new Error(`Could not get upload URL: ${await resp.text()}`);
   }
-  return resp.json();  // returns { uploadUrl, docId, contentType }
+
+  return resp.json();  // { uploadUrl, downloadUrl, docId, … }
 }
 
 // 2) wire up the upload button once
 confirmUp.onclick = async () => {
-  const account = 'Individual';
-  const uploads = selectedFiles.map(async file => {   
-    const { uploadUrl, downloadUrl, docId } =
-      await fetchUploadUrl(file.name, account, file.type);
-    await fetch(uploadUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
-    docsData.uploaded.push({ name: file.name, desc: file.name, url: downloadUrl, tags: [], docId });
-  });
-  await Promise.all(uploads);
-  renderDocs();
+  const account = me.category;
+
+  // 1) fire off all the file‐PUTs
+  await Promise.all(selectedFiles.map(async file => {
+    const { uploadUrl } = await fetchUploadUrl(file.name, account, file.type);
+    await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": file.type },
+      body: file
+    });
+  }));
+  const allDocs = await fetchDocs(me.category);
+  console.log("fetchDocs returned:", allDocs);
+
+  // 2) now re‐fetch *all* docs from your backend
+  try {
+    const allDocs = await fetchDocs(me.category);
+    if (Array.isArray(allDocs)) { // Check if allDocs is an array
+      docsData.uploaded = allDocs.filter(d => d.status === 'uploaded');
+      docsData.review   = allDocs.filter(d => d.status === 'review');
+      docsData.filed    = allDocs.filter(d => d.status === 'filed');
+    } else {
+      console.error("fetchDocs did not return an array:", allDocs);
+      // Handle the case where fetchDocs doesn't return an array, perhaps by
+      // setting the docsData properties to empty arrays or displaying an error
+      // to the user.
+      docsData.uploaded = [];
+      docsData.review   = [];
+      docsData.filed    = [];
+    }
+  } catch (e) {
+    console.error("failed to reload docs:", e);
+  }
+
+  // 3) re-render
   updateStats();
+  renderDocs();
+
+  // 4) reset UI
   resetUpload();
   uploadMd.classList.add('hidden');
 };
 
 
+// 3) fetch the list of existing docs from your HTTP API
+// ✅ use exactly the "Invoke URL" from your Stage
+async function fetchDocs(category) {
+  const qs = new URLSearchParams({
+    user:    me.email,
+    partner: me.partner,
+    category
+  });
 
+  const url = `${API_BASE}/ListDocuments?${qs.toString()}`;
+  console.log('Fetching docs from', url);
+  const resp = await fetch(`${API_BASE}/ListDocuments?${qs.toString()}`, { method: 'GET' });
+  if (!resp.ok) throw new Error(await resp.text());
 
+  const payload = await resp.json();
+  // unwrap if your Lambda proxy returns { body: "…json…" }
+    // unwrap proxy
+  let docs = payload.body && typeof payload.body === 'string'
+    ? JSON.parse(payload.body)
+    : payload;
+
+  // **always** return an array
+  return Array.isArray(docs) ? docs : [ docs ];
+
+}
 
 
 
