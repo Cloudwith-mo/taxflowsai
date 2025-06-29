@@ -460,18 +460,7 @@ me.category = picked || me['custom:category']?.split(',')[0] || 'Individual';
       profileEdit.classList.add('hidden');
       profileView.classList.remove('hidden');
     };
-    saveBtn.onclick   = () => {
-      me.name     = eName.value.trim();
-      me.email    = eEmail.value.trim();
-      me.phone    = ePhone.value.trim();
-      me.category = eCategory.value;
-      me.partner  = ePartner.value.trim();
-      localStorage.setItem('user_' + CURRENT, JSON.stringify(me));
-      renderHeader();
-      renderSettingsView();
-      profileEdit.classList.add('hidden');
-      profileView.classList.remove('hidden');
-    };
+    
     logoutBtn.onclick = () => {
       localStorage.removeItem('currentUser');
       location.replace('taxflowsai-login.html');
@@ -540,9 +529,6 @@ me.category = picked || me['custom:category']?.split(',')[0] || 'Individual';
       bar.style.left  = x + 'px';
       renderHeader();
 
-// load and bucket the real documents into your three lists
-const allDocs = await fetchDocs(me.category)
-console.log('fetchDocs →', allDocs, typeof allDocs)
 
 fetchDocs(me.category)
   .then(list => {
@@ -658,16 +644,19 @@ fetchDocs(me.category)
     };
 
 // 1) fetch a presigned URL (passing filename, account, user, partner, category, username)
-async function fetchUploadUrl(filename, account, contentType) {
+async function fetchUploadUrl(filename, account, contentType, tags = []) {
+
   const payload = {
-    filename,
-    account,
-    user: me.email,
-    contentType,
-    partner:  me.partner,   // e.g. "Acme Tax Office"
-    category: me.category,  // e.g. "Individual"
-    username: me.name       // e.g. "Jane Doe"
-  };
+  filename,
+  account,
+  user: me.email,
+  contentType,
+  partner: me.partner,
+  category: me.category,
+  username: me.name,
+  tags
+};
+
 
   const resp = await fetch(
     `${API_BASE}/GetUploadUrl`,
@@ -689,45 +678,51 @@ async function fetchUploadUrl(filename, account, contentType) {
 confirmUp.onclick = async () => {
   const account = me.category;
 
-  // 1) fire off all the file‐PUTs
-  await Promise.all(selectedFiles.map(async file => {
-    const { uploadUrl } = await fetchUploadUrl(file.name, account, file.type);
-    await fetch(uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": file.type },
-      body: file
-    });
-  }));
-  const allDocs = await fetchDocs(me.category);
-  console.log("fetchDocs returned:", allDocs);
-
-  // 2) now re‐fetch *all* docs from your backend
   try {
+    await Promise.all(selectedFiles.map(async (file, i) => {
+      const li = modalList.children[i];
+      const displayName = li.querySelector('.filename-input')?.value?.trim() || file.name;
+      const tagStr = li.querySelector('.tag-input')?.value?.trim() || '';
+      const tags = tagStr.split(',').map(t => t.trim()).filter(Boolean);
+
+      const { uploadUrl } = await fetchUploadUrl(displayName, account, file.type, tags);
+
+      await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file
+      });
+    }));
+
     const allDocs = await fetchDocs(me.category);
-    if (Array.isArray(allDocs)) { // Check if allDocs is an array
+    if (Array.isArray(allDocs)) {
       docsData.uploaded = allDocs.filter(d => d.status === 'uploaded');
-      docsData.review   = allDocs.filter(d => d.status === 'review');
-      docsData.filed    = allDocs.filter(d => d.status === 'filed');
-    } else {
-      console.error("fetchDocs did not return an array:", allDocs);
-      // Handle the case where fetchDocs doesn't return an array, perhaps by
-      // setting the docsData properties to empty arrays or displaying an error
-      // to the user.
-      docsData.uploaded = [];
-      docsData.review   = [];
-      docsData.filed    = [];
+      docsData.review = allDocs.filter(d => d.status === 'review');
+      docsData.filed = allDocs.filter(d => d.status === 'filed');
+      updateStats();
+      renderDocs();
     }
+
+    // ✅ Hide modal and reset state
+    resetUpload();
+    uploadMd.classList.add('hidden');
+
+    // ✅ Show toast
+    const toast = document.createElement('div');
+    toast.textContent = '✅ Documents uploaded successfully!';
+    toast.style.cssText = `
+      position:fixed; bottom:2rem; right:2rem;
+      background:var(--card-bg); color:var(--text);
+      padding:.75rem 1.25rem; border-radius:8px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:.9rem; z-index:2000;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+
   } catch (e) {
-    console.error("failed to reload docs:", e);
+    console.error('Upload error:', e);
+    alert("Upload failed: " + e.message);
   }
-
-  // 3) re-render
-  updateStats();
-  renderDocs();
-
-  // 4) reset UI
-  resetUpload();
-  uploadMd.classList.add('hidden');
 };
 
 
@@ -757,7 +752,24 @@ async function fetchDocs(category) {
 
 }
 
+document.querySelector('.chat-input button').onclick = () => {
+  const msg = document.querySelector('.chat-input input').value.trim();
+  if (!msg) return;
+  alert(`(Simulated AI Response)\n\nLily says: “${msg}”`);
+};
 
+saveBtn.onclick   = () => {
+      me.name     = eName.value.trim();
+      me.phone    = ePhone.value.trim();
+      me.category = eCategory.value;
+      me.partner  = ePartner.value.trim();
+
+      localStorage.setItem('user_' + me.email, JSON.stringify(me));
+  renderHeader();
+  renderSettingsView();
+  profileEdit.classList.add('hidden');
+  profileView.classList.remove('hidden');
+    };
 
 
 </script>
