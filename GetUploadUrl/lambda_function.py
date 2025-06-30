@@ -70,25 +70,30 @@ def lambda_handler(event, context):
         ExpiresIn=3600
     )
 
-    # ✅ Write metadata to DynamoDB
+    # ✅ Write metadata to DynamoDB (skip empty tags)
     ts = datetime.utcnow().isoformat()
     print("📥 Payload received:", json.dumps(payload))
     print(f"📦 Uploading metadata for user: {user} | filename: {filename}")
 
+    item = {
+        "user":      {"S": user},
+        "docId":     {"S": doc_id},
+        "filename":  {"S": filename},
+        "account":   {"S": account},
+        "partner":   {"S": payload.get("partner", "")},
+        "category":  {"S": payload.get("category", "")},
+        "status":    {"S": "uploaded"},
+        "timestamp": {"S": ts},
+        "s3Key":     {"S": key}
+    }
+
+    tags = payload.get("tags", [])
+    if tags:  # ✅ Only include if non-empty
+        item["tags"] = {"SS": tags}
+
     dynamo.put_item(
         TableName=os.environ["METADATA_TABLE"],
-        Item={
-            "user":      {"S": user},
-            "docId":     {"S": doc_id},
-            "filename":  {"S": filename},
-            "account":   {"S": account},
-            "partner":   {"S": payload.get("partner", "")},
-            "category":  {"S": payload.get("category", "")},
-            "status":    {"S": "uploaded"},
-            "timestamp": {"S": ts},
-            "s3Key":     {"S": key},
-            "tags":      {"SS": payload.get("tags", [])}
-        }
+        Item=item
     )
 
     # ✅ Return everything to client
