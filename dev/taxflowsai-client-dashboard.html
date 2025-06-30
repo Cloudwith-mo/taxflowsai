@@ -675,7 +675,8 @@ async function fetchUploadUrl(filename, account, contentType, tags = []) {
     `${API_BASE}/GetUploadUrl`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+  'Content-Type': 'application/json'},
       body: JSON.stringify(payload)
     }
   );
@@ -788,4 +789,3 @@ saveBtn.onclick   = () => {
 </script>
 </body>
 </html>
-
