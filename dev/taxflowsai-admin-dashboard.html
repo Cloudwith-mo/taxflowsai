@@ -25,40 +25,14 @@
     *,*::before,*::after { box-sizing:border-box; margin:0; padding:0 }
     body { background:var(--bg); color:var(--text); font-family:"Segoe UI",sans-serif; }
     a { color:var(--primary); text-decoration:none }
-    .layout { display:flex; min-height:100vh }
+    .container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 2rem 1rem;
+}
 
-    /* SIDEBAR */
-    .sidebar {
-      width:220px; background:var(--card-bg); padding:1rem;
-      box-shadow:0 4px 12px var(--shadow); display:flex; flex-direction:column;
-    }
-    .sidebar-header {
-      display:flex; align-items:center; justify-content:space-between;
-      margin-bottom:1.5rem;
-    }
-    .sidebar-header i { font-size:1.5rem; color:var(--primary) }
-    .sidebar-header h1 { font-size:1.25rem; font-weight:500 }
-    .sidebar-header button {
-      background:rgba(255,255,255,0.05); border:none;
-      padding:.4rem; border-radius:8px; cursor:pointer;
-      transition:background .2s;
-    }
-    .sidebar-header button:hover { background:rgba(41,121,255,0.2) }
-    .nav-section h2 {
-      color:var(--text); font-size:1.1rem; margin-bottom:.75rem;
-    }
-    .nav-buttons button {
-      display:block; width:100%; text-align:left;
-      padding:.6rem 1rem; margin-bottom:.5rem;
-      background:var(--card-bg); border:1px solid rgba(255,255,255,0.1);
-      border-radius:8px; color:var(--text); cursor:pointer;
-      transition:background .2s,border-color .2s; font-size:1rem;
-    }
-    .nav-buttons button.active,
-    .nav-buttons button:hover {
-      background:rgba(41,121,255,0.1);
-      border-color:var(--primary);
-    }
+
+    
 
     /* MAIN CONTENT */
     .content { flex:1; padding:2rem 1rem }
@@ -123,7 +97,10 @@
     }
     .badge.incomplete { background:var(--incomplete) }
     .badge.inprogress { background:var(--inprogress) }
-    .badge.complete   { background:var(--complete) }
+    .badge.complete { background: #165c43; border-radius: 50px; padding: .3rem .8rem; }
+.badge.inprogress { background: #6e5319; border-radius: 50px; padding: .3rem .8rem; }
+.badge.incomplete { background: #6e2c2c; border-radius: 50px; padding: .3rem .8rem; }
+
 
     /* DETAIL VIEW */
     .detail { display:none }
@@ -214,92 +191,145 @@
     .logout-btn:hover {
       background:var(--text); color:var(--bg);
     }
+
+    .card > div {
+  padding: 1rem;
+}
+
+.nav-buttons button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+
+.filters-row select {
+  padding: .6rem .75rem;
+  background: var(--card-bg);
+  border: 1px solid var(--muted);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: .95rem;
+}
+.filters-row input[type="text"]::placeholder {
+  color: var(--muted);
+}
+
+.filters-row select,
+.filters-row input[type="text"] {
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: var(--card-bg);
+  border: 1px solid var(--muted);
+  color: var(--text);
+  min-width: 180px;
+}
+
+.badge.tag-pill {
+  background: var(--primary);
+  border-radius: 50px;
+  padding: .35rem .75rem;
+  margin-right: .5rem;
+  font-weight: 500;
+  font-size: .8rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+#activityCard {
+  transition: max-height 0.4s ease, opacity 0.4s ease;
+  overflow: hidden;
+}
+#activityCard.hidden {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+  margin: 0;
+}
+
+
   </style>
 </head>
 <body>
-
-  <div class="layout">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <i class="fas fa-cloud"></i>
-        <h1>TaxFlows<span>AI</span></h1>
-        <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i></button>
-      </div>
-      <div class="nav-section">
-        <h2>Dashboard</h2>
-        <nav class="nav-buttons">
-          <button data-category="Individuals" class="active">Individuals</button>
-          <button data-category="Small Business">Small Business</button>
-          <button data-category="Corporations">Corporations</button>
-        </nav>
-      </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="content">
-      <div class="header">
-        <div class="header-left">
-          <i class="fas fa-cloud"></i>
-          <h1>TaxFlows<span>AI</span></h1>
-        </div>
-        <div class="header-right">
-          <!-- gear opens settings now -->
-          <button id="settingsBtnHeader"><i class="fas fa-cog"></i></button>
-        </div>
-      </div>
-      <hr/>
-
-      <div class="breadcrumb">
-        <a href="#">Dashboard</a><span>/</span>
-        <span id="crumb">individuals</span>
-      </div>
-      <div class="greeting" id="greet">Welcome, …</div>
-      <div class="subtext" id="subtext">You are an admin from ….</div>
-
-      <!-- LIST CARD -->
-      <div class="card" id="listCard">
-        <div class="card-header">
-          <h3><span id="crumbHeader">Individuals</span></h3>
-          <div class="filters">
-            <select id="filterDoc">
-              <option value="all">All Doc Types</option>
-            </select>
-            <select id="filterStatus">
-              <option value="all">All Status</option>
-              <option value="incomplete">Incomplete</option>
-              <option value="inprogress">In Progress</option>
-              <option value="complete">Complete</option>
-            </select>
-          </div>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Client Name</th>
-              <th>Doc Type/Tag</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-
-      <!-- DETAIL VIEW -->
-      <div class="detail" id="detailView">
-        <div class="detail-header">
-          <div class="breadcrumb">
-            <a href="#">Dashboard</a><span>/</span>
-            <a href="#" id="crumbCategory">Individuals</a><span>/</span>
-            <span id="crumbClient">Johnny Burton</span>
-          </div>
-          <h2 id="detailName">Johnny Burton</h2>
-        </div>
-        <div id="docsContainer"></div>
-        <button class="back-btn" id="backBtn">← Back to list</button>
-      </div>
-    </main>
+<div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+  <div>
+    <div style="display: flex; align-items: center; gap: .75rem;">
+      <i class="fas fa-cloud" style="font-size: 1.5rem; color: var(--primary);"></i>
+      <h1 style="font-size: 1.75rem; margin: 0;">TaxFlows<span style="color: var(--primary)">AI</span></h1>
+    </div>
+    <p style="color: var(--muted); font-size: 1rem; margin-top: .25rem;">Overview & Filtered View</p>
   </div>
+  <button id="settingsBtnHeader" style="background: none; border: none; color: var(--text); font-size: 1.25rem;">
+    <i class="fas fa-cog"></i>
+  </button>
+</div>
+
+
+  <div class="container">
+  <hr />
+
+  <div class="greeting" id="greet">Welcome, [Admin Name]</div>
+<div class="subtext" id="subtext">You're viewing: Individual Clients</div>
+
+<div class="filters-row" style="display:flex; gap:1rem; margin:1.5rem 0;">
+  <input type="text" id="partnerDisplay" disabled style="flex:1; padding:.6rem .75rem; background:var(--card-bg); border:1px solid var(--muted); border-radius:8px; color:var(--text);" />
+  <select id="filterCategory" style="flex:1;"></select>
+  <input type="text" id="filterClient" placeholder="Search by name..." style="flex:2; padding:.6rem .75rem; border-radius:8px; background:var(--card-bg); border:1px solid var(--muted); color:var(--text);" />
+</div>
+
+
+
+<div class="stats" style="display:flex; gap:1rem; margin-bottom:2rem;">
+  <div class="card" style="flex:1; text-align:center;">
+    <h2 id="stat-clients" style="font-size:2rem;">0</h2>
+    <p style="color:var(--muted);">Total Clients</p>
+  </div>
+  <div class="card" style="flex:1; text-align:center;">
+    <h2 id="stat-docs" style="font-size:2rem;">0</h2>
+    <p style="color:var(--muted);">Uploaded Docs</p>
+  </div>
+  <div class="card" style="flex:1; text-align:center;">
+    <h2 id="stat-review" style="font-size:2rem;">0</h2>
+    <p style="color:var(--muted);">In Review</p>
+  </div>
+  <div class="card" style="flex:1; text-align:center;">
+    <h2 id="stat-filed" style="font-size:2rem;">0</h2>
+    <p style="color:var(--muted);">Filed</p>
+  </div>
+</div>
+
+<div style="text-align:center; margin-top:-1rem;">
+  <button id="toggleActivity" style="background:none; border:none; color:var(--muted); font-size:1.5rem; cursor:pointer;">⬇</button>
+</div>
+
+
+  <!-- ACTIVITY FEED -->
+  <div id="activityCard" class="card">
+  <h3 style="margin-bottom:1rem;">Activity Feed</h3>
+
+    <ul id="activityFeed" style="list-style:none; padding:0; margin:0;">
+      <!-- JS will populate -->
+    </ul>
+  </div>
+
+
+<div class="card">
+  <h3 style="margin-bottom:1rem;">Client Details</h3>
+  <table style="width:100%; border-collapse:collapse;">
+    <thead>
+  <tr>
+    <th>Client Name</th>
+    <th>Tags</th>
+    <th>Status</th>
+  </tr>
+</thead>
+
+    <tbody id="clientDetailsBody"></tbody>
+  </table>
+</div>
+
+
+  
 
   <!-- SETTINGS MODAL -->
   <div id="settingsModal" class="modal-overlay hidden">
@@ -319,21 +349,36 @@
   </div>
 
   <script>
+    
     // AUTH & PROFILE
     const CURRENT = localStorage.getItem('currentUser');
-    if (!CURRENT) location.replace('taxflowsai-login.html');
-    const me = JSON.parse(localStorage.getItem('user_' + CURRENT));
-    if (me.role !== 'admin') location.replace('taxflowsai-client-dashboard.html');
+let me = null;
+
+try {
+  me = typeof CURRENT === 'string' ? JSON.parse(CURRENT) : CURRENT;
+  if (!me || me['custom:role'] !== 'admin') {
+    throw new Error('Invalid or missing admin profile');
+  }
+} catch (err) {
+  console.error('Auth error:', err);
+  localStorage.removeItem('currentUser');
+  location.replace('taxflowsai-login.html');
+}
+
+me.partner = me['custom:partner'];
+document.getElementById('partnerDisplay').value = `Partner: ${me.partner}`;
+
+document.getElementById('partnerDisplay').value = `Network: ${me.partner}`;
+
+me.role = me['custom:role'];
+me.category = me['custom:category'];
+
+
 
     // HEADER GREETING
-    document.getElementById('greet').textContent   = `Welcome, ${me.name}`;
-    document.getElementById('subtext').textContent = `You are an admin from ${me.partner}.`;
+    document.getElementById('greet').textContent = `Welcome, ${me.name}`;
 
-    // LOGOUT (sidebar)
-    document.getElementById('logoutBtn').onclick = () => {
-      localStorage.removeItem('currentUser');
-      location.replace('taxflowsai-login.html');
-    };
+    
 
     // SETTINGS MODAL ELEMENTS
     const settingsBtnHeader = document.getElementById('settingsBtnHeader');
@@ -346,11 +391,12 @@
 
     // OPEN SETTINGS
     settingsBtnHeader.onclick = () => {
-      pName.textContent    = me.name;
-      pEmail.textContent   = me.email;
-      pPartner.textContent = `Partner: ${me.partner}`;
-      settingsModal.classList.remove('hidden');
-    };
+  pName.textContent    = me.name;
+  pEmail.textContent   = me.email;
+  pPartner.textContent = `Partner: ${me.partner}`;
+  settingsModal.classList.remove('hidden');
+};
+
     // CLOSE SETTINGS
     closeSettings.onclick = () => settingsModal.classList.add('hidden');
     settingsModal.onclick = e => {
@@ -365,61 +411,138 @@
     // --- REST OF EXISTING ADMIN JS BELOW (unchanged) ---
 
     // CLIENTS DATA
-    let clients = JSON.parse(localStorage.getItem('clients')) || [];
-    localStorage.setItem('clients', JSON.stringify(clients));
+    
+  let clients = JSON.parse(localStorage.getItem('clients'));
+
+if (!clients || !clients.length) {
+  clients = [
+    {
+      name: "John Smith",
+      avatar: "https://i.pravatar.cc/36?img=1",
+      partner: "AXY Tax Office",
+      category: "Individuals",
+      docs: [
+        { name: "W-2_2023.pdf", status: "complete", desc: "Wage and Tax Statement" },
+        { name: "1099-INT.pdf", status: "inprogress", desc: "Interest Income" }
+      ]
+    },
+    {
+      name: "Sarah Johnson",
+      avatar: "https://i.pravatar.cc/36?img=2",
+      partner: "AXY Tax Office",
+      category: "Small Business",
+      docs: [
+        { name: "Schedule-C_2023.pdf", status: "inprogress", desc: "Profit or Loss" },
+        { name: "1099-NEC.pdf", status: "incomplete", desc: "Nonemployee Compensation" }
+      ]
+    },
+    {
+      name: "Acme Corp",
+      avatar: "https://i.pravatar.cc/36?img=3",
+      partner: "AXY Tax Office",
+      category: "Corporations",
+      docs: [
+        { name: "1120_2023.pdf", status: "complete", desc: "US Corp Income Tax Return" }
+      ]
+    },
+    {
+      name: "Lisa Turner",
+      avatar: "https://i.pravatar.cc/36?img=4",
+      partner: "AXY Tax Office",
+      category: "Individuals",
+      docs: [
+        { name: "W-2_2023.pdf", status: "incomplete", desc: "Employment income" }
+      ]
+    }
+  ];
+  localStorage.setItem('clients', JSON.stringify(clients));
+}
+
 
     // UI REFS
     let currentCategory = 'Individuals';
-    const tableBody     = document.getElementById('tableBody');
+
+const filterCategory = document.getElementById('filterCategory');
+const filterClient = document.getElementById('filterClient');
+
+function populateFilterDropdowns() {
+  
+  const categories = ["Individuals", "Small Business", "Corporations"];
+
+  const names = [...new Set(clients.map(c => c.name))];
+
+
+filterCategory.innerHTML = '<option value="">All</option>';
+  
+
+  categories.forEach(c => {
+  filterCategory.innerHTML += `<option value="${c}">${c}</option>`;
+});
+filterClient.oninput = renderTable;
+
+}
+
+
+    document.getElementById('subtext').textContent = `You're viewing: ${currentCategory} Clients`;
+
+
+    const tableBody = document.getElementById('clientDetailsBody');
     const crumbElem     = document.getElementById('crumb');
     const crumbHeader   = document.getElementById('crumbHeader');
-    const filterDoc     = document.getElementById('filterDoc');
-    const filterStatus  = document.getElementById('filterStatus');
     const docsContainer = document.getElementById('docsContainer');
     const listCard      = document.getElementById('listCard');
     const detailView    = document.getElementById('detailView');
-    const backBtn       = document.getElementById('backBtn');
+  
 
-    // Populate doc‐type filter
-    (() => {
-      const types = new Set();
-      clients.forEach(c => c.docs.forEach(d => types.add(d.name.split('.')[0])));
-      types.forEach(t => {
-        const o = document.createElement('option');
-        o.value = t; o.textContent = t;
-        filterDoc.appendChild(o);
-      });
-    })();
+    
 
     // Render table
-    function renderTable() {
-      tableBody.innerHTML = '';
-      const df = filterDoc.value, sf = filterStatus.value;
-      clients
-        .filter(c => c.category === currentCategory)
-        .filter(c => df === 'all' || c.docs.some(d => d.name.split('.')[0] === df))
-        .filter(c => sf === 'all' || c.docs.some(d => d.status === sf))
-        .forEach((c,i) => {
-          const tags = c.docs.map(d=>d.name.split('.')[0]).join(', ');
-          const all = c.docs.every(d=>d.status==='complete')
-                    ? 'complete'
-                    : c.docs.every(d=>d.status==='incomplete')
-                      ? 'incomplete'
-                      : 'inprogress';
-          const tr = document.createElement('tr');
-          tr.dataset.idx = i;
-          tr.innerHTML = `
-            <td><div class="client-cell">
-              <img src="${c.avatar}" /><span>${c.name}</span>
-            </div></td>
-            <td>${tags}</td>
-            <td><span class="badge ${all}">
-              ${all.charAt(0).toUpperCase()+all.slice(1)}
-            </span></td>
-          `;
-          tableBody.appendChild(tr);
-        });
-    }
+function renderTable() {
+  const pf = me.partner;
+  const cf = filterCategory.value;
+  const nf = filterClient.value.toLowerCase();
+
+  const filtered = clients
+    .filter(c => c.partner === pf)
+    .filter(c => !cf || c.category === cf)
+    .filter(c => !nf || c.name.toLowerCase().includes(nf));
+
+  // ⬇️ Your stats use the filtered array safely now
+  document.getElementById('stat-clients').textContent = filtered.length;
+  document.getElementById('stat-docs').textContent = filtered.reduce((a,c)=>a+c.docs.length, 0);
+  document.getElementById('stat-review').textContent = filtered.reduce((a,c)=>a+c.docs.filter(d=>d.status==='inprogress').length, 0);
+  document.getElementById('stat-filed').textContent = filtered.reduce((a,c)=>a+c.docs.filter(d=>d.status==='complete').length, 0);
+
+  tableBody.innerHTML = '';
+
+  filtered.forEach((c, i) => {
+    const tagSet = [...new Set(c.docs.map(d => d.name.split('.')[0]))];
+    const tags = tagSet.map(t => `<span class="badge tag-pill">${t}</span>`).join('');
+    const all = c.docs.every(d => d.status === 'complete')
+      ? 'complete'
+      : c.docs.every(d => d.status === 'incomplete')
+        ? 'incomplete'
+        : 'inprogress';
+
+    const tr = document.createElement('tr');
+    tr.dataset.idx = i;
+    tr.innerHTML = `
+      <td><div class="client-cell">
+        <img src="${c.avatar}" /><span>${c.name}</span>
+      </div></td>
+      <td>${tags}</td>
+      <td><span class="badge ${all}">${all.charAt(0).toUpperCase() + all.slice(1)}</span></td>
+    `;
+    tableBody.appendChild(tr);
+  });
+}
+
+populateFilterDropdowns();
+
+filterCategory.onchange = renderTable;
+filterClient.onchange = renderTable;
+
+
 
     // Row click → detail
     tableBody.addEventListener('click', e => {
@@ -440,8 +563,8 @@
         renderTable();
       };
     });
-    filterDoc.onchange    = renderTable;
-    filterStatus.onchange = renderTable;
+    
+
 
     // Detail view
     function openDetail(idx) {
@@ -479,11 +602,6 @@
       docsContainer.querySelectorAll('.comment-box').forEach(txt=>txt.onchange = ()=>{ c.docs[txt.dataset.idx].comment = txt.value; saveClients(); });
     }
 
-    backBtn.onclick = () => {
-      detailView.style.display = 'none';
-      listCard.style.display   = 'block';
-      renderTable();
-    };
 
     function saveClients() {
       localStorage.setItem('clients', JSON.stringify(clients));
@@ -494,9 +612,55 @@
     }
 
     // Initial render
-    document.getElementById('crumb').textContent       = currentCategory.toLowerCase();
-    document.getElementById('crumbHeader').textContent = currentCategory;
-    renderTable();
+    
+
+    const feed = document.getElementById('activityFeed');
+const activityEvents = [
+  { user: "Tax Flows", action: "uploaded a document", doc: "Form W-2", ago: "3h ago" },
+  { user: "John Smith", action: "reviewed a document", doc: "Q4 Report 2023", ago: "5h ago" },
+  { user: "Tax Flows", action: "submitted a review request for", doc: "Form 1099-MISC", ago: "1d ago" },
+  { user: "Alice Johnson", action: "uploaded a document", doc: "Expense Report", ago: "1d ago" }
+];
+
+activityEvents.forEach(evt => {
+  const li = document.createElement('li');
+  li.style.cssText = "display:flex; align-items:center; margin-bottom:.75rem;";
+  li.innerHTML = `
+    <i class="fas fa-user-circle" style="font-size:1.75rem; margin-right:.75rem; color:var(--primary)"></i>
+    <div style="flex:1;">
+      <strong>${evt.user}</strong> ${evt.action}<br>
+      <span style="color:var(--muted); font-size:.9rem;">"${evt.doc}" • ${evt.ago}</span>
+    </div>
+  `;
+  feed.appendChild(li);
+});
+
+document.querySelectorAll('.nav-buttons button').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.nav-buttons button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Optional: Show/hide content based on label or data-route
+    const label = btn.textContent.trim();
+    console.log('Switching to view:', label);
+  };
+});
+const toggleBtn = document.getElementById('toggleActivity');
+const activityCard = document.getElementById('activityCard');
+
+
+
+
+
+toggleBtn.onclick = () => {
+  activityCard.classList.toggle('hidden');
+  toggleBtn.textContent = activityCard.classList.contains('hidden') ? '⬆' : '⬇';
+};
+filterCategory.onchange = renderTable;
+filterClient.oninput = renderTable;
+renderTable(); // initial load
+
+
   </script>
 </body>
 </html>
