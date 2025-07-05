@@ -259,10 +259,20 @@
     </div>
     <p style="color: var(--muted); font-size: 1rem; margin-top: .25rem;">Overview & Filtered View</p>
   </div>
-  <button id="settingsBtnHeader" style="background: none; border: none; color: var(--text); font-size: 1.25rem;">
+ <div style="display: flex; align-items: center; gap: 1rem;">
+  <!-- Refresh Button -->
+  <button id="refreshBtn" title="Refresh & Fix Metadata" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer;">
+    <i class="fas fa-sync-alt"></i>
+  </button>
+
+  <!-- Gear (Settings) Button -->
+  <button id="settingsBtnHeader" style="background: none; border: none; color: white; font-size: 1.25rem;">
     <i class="fas fa-cog"></i>
   </button>
 </div>
+
+</div>
+
 
 
   <div class="container">
@@ -348,6 +358,25 @@
     </div>
   </div>
 
+  <!-- Detail View Container -->
+<div id="detailView" class="detail" style="display: none;">
+  <div class="detail-header">
+    <div class="breadcrumb">
+      <a href="#">Dashboard</a>
+      <span>/</span>
+      <span id="crumbCategory">...</span>
+      <span>/</span>
+      <span id="crumbClient">...</span>
+    </div>
+    <h2 id="detailName">Client Name</h2>
+  </div>
+  <div id="docsContainer"></div>
+</div>
+
+<!-- Optional: Placeholder for listCard -->
+<div id="listCard" style="display: block;"></div>
+
+
   <script>
     
     // AUTH & PROFILE
@@ -372,8 +401,6 @@ document.getElementById('partnerDisplay').value = `Network: ${me.partner}`;
 
 me.role = me['custom:role'];
 me.category = me['custom:category'];
-
-
 
     // HEADER GREETING
     document.getElementById('greet').textContent = `Welcome, ${me.name}`;
@@ -412,62 +439,37 @@ me.category = me['custom:category'];
 
     // CLIENTS DATA
     
-  let clients = JSON.parse(localStorage.getItem('clients'));
+let clients = [];
 
-if (!clients || !clients.length) {
-  clients = [
-    {
-      name: "John Smith",
-      avatar: "https://i.pravatar.cc/36?img=1",
-      partner: "AXY Tax Office",
-      category: "Individuals",
-      docs: [
-        { name: "W-2_2023.pdf", status: "complete", desc: "Wage and Tax Statement" },
-        { name: "1099-INT.pdf", status: "inprogress", desc: "Interest Income" }
-      ]
-    },
-    {
-      name: "Sarah Johnson",
-      avatar: "https://i.pravatar.cc/36?img=2",
-      partner: "AXY Tax Office",
-      category: "Small Business",
-      docs: [
-        { name: "Schedule-C_2023.pdf", status: "inprogress", desc: "Profit or Loss" },
-        { name: "1099-NEC.pdf", status: "incomplete", desc: "Nonemployee Compensation" }
-      ]
-    },
-    {
-      name: "Acme Corp",
-      avatar: "https://i.pravatar.cc/36?img=3",
-      partner: "AXY Tax Office",
-      category: "Corporations",
-      docs: [
-        { name: "1120_2023.pdf", status: "complete", desc: "US Corp Income Tax Return" }
-      ]
-    },
-    {
-      name: "Lisa Turner",
-      avatar: "https://i.pravatar.cc/36?img=4",
-      partner: "AXY Tax Office",
-      category: "Individuals",
-      docs: [
-        { name: "W-2_2023.pdf", status: "incomplete", desc: "Employment income" }
-      ]
-    }
-  ];
-  localStorage.setItem('clients', JSON.stringify(clients));
+async function fetchClientsFromDynamo() {
+  const category = document.getElementById("filterCategory").value || "Individual";
+  const name = document.getElementById("filterClient").value.trim();
+
+  const url = new URL("https://uwxstszh9l.execute-api.us-east-1.amazonaws.com/default/ListDocuments");
+  url.searchParams.set("partner", me.partner);
+  url.searchParams.set("category", category);
+  if (name) url.searchParams.set("name", name);
+
+  const resp = await fetch(url.toString(), { method: "GET" });
+
+  if (!resp.ok) {
+    throw new Error('Failed to fetch client data');
+  }
+
+  return resp.json();
 }
 
 
+
     // UI REFS
-    let currentCategory = 'Individuals';
+    let currentCategory = 'Individual';
 
 const filterCategory = document.getElementById('filterCategory');
 const filterClient = document.getElementById('filterClient');
 
 function populateFilterDropdowns() {
   
-  const categories = ["Individuals", "Small Business", "Corporations"];
+  const categories = ["Individual", "Small Business", "Corporations"];
 
   const names = [...new Set(clients.map(c => c.name))];
 
@@ -659,7 +661,75 @@ toggleBtn.onclick = () => {
 filterCategory.onchange = renderTable;
 filterClient.oninput = renderTable;
 renderTable(); // initial load
+filterCategory.onchange = reloadWithFilters;
+filterClient.oninput = debounce(reloadWithFilters, 400); // optional: debounce to reduce API calls
 
+function reloadWithFilters() {
+  fetchClientsFromDynamo()
+    .then(result => {
+      clients = result;
+      localStorage.setItem('clients', JSON.stringify(clients));
+      renderTable();
+    })
+    .catch(err => {
+      console.error("Error loading filtered data:", err);
+      alert("Could not load filtered client list.");
+    });
+}
+
+// Optional: debounce helper
+function debounce(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+document.getElementById("refreshBtn").onclick = async () => {
+  const btn = document.getElementById("refreshBtn");
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+  try {
+    const resp = await fetch("https://uwxstszh9l.execute-api.us-east-1.amazonaws.com/default/PatchBrokenMetadata", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({})
+});
+
+
+    if (!resp.ok) throw new Error("Lambda call failed");
+    const data = await resp.json();
+
+    alert(`✅ Fixed ${data.patched.length || "some"} items.`);
+    reloadWithFilters(); // Refresh Admin table after fix
+  } catch (err) {
+    alert("❌ Refresh failed.");
+    console.error(err);
+  } finally {
+    btn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+  }
+};
+
+localStorage.setItem('clients', JSON.stringify([
+  {
+    name: "Johnny Burton",
+    avatar: "https://i.pravatar.cc/150?u=johnny",
+    category: "Individuals",
+    partner: "BlueRiver CPAs",
+    docs: [
+      {
+        name: "W-2_2023.pdf",
+        desc: "Uploaded tax document",
+        url: "https://example.com/doc1.pdf",
+        status: "incomplete",
+        comment: ""
+      }
+    ]
+  }
+]));
 
   </script>
 </body>
