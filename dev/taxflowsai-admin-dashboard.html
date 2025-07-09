@@ -329,8 +329,11 @@
     <thead>
   <tr>
     <th>Client Name</th>
-    <th>Tags</th>
-    <th>Status</th>
+    <th>Partner</th>
+    <th>Category</th>
+    <th># Docs</th>
+    <th>In Review</th>
+    <th>Filed</th>
   </tr>
 </thead>
 
@@ -376,6 +379,7 @@
 <!-- Optional: Placeholder for listCard -->
 <div id="listCard" style="display: block;"></div>
 
+<div class="card" id="stat-clients-card" style="flex:1; text-align:center;">...</div>
 
   <script>
     
@@ -518,8 +522,8 @@ function renderTable() {
   tableBody.innerHTML = '';
 
   filtered.forEach((c, i) => {
-    const tagSet = [...new Set(c.docs.map(d => d.name.split('.')[0]))];
-    const tags = tagSet.map(t => `<span class="badge tag-pill">${t}</span>`).join('');
+    const tags = `<span class="badge tag-pill">${c.docs.length} docs</span>`;
+
     const all = c.docs.every(d => d.status === 'complete')
       ? 'complete'
       : c.docs.every(d => d.status === 'incomplete')
@@ -527,19 +531,28 @@ function renderTable() {
         : 'inprogress';
 
     const tr = document.createElement('tr');
-    tr.dataset.idx = i;
-    tr.innerHTML = `
-      <td><div class="client-cell">
-        <img src="${c.avatar}" /><span>${c.name}</span>
-      </div></td>
-      <td>${tags}</td>
-      <td><span class="badge ${all}">${all.charAt(0).toUpperCase() + all.slice(1)}</span></td>
-    `;
+tr.dataset.idx = i;
+
+const numDocs = c.docs.length;
+const numReview = c.docs.filter(d => d.status === 'inprogress').length;
+const numFiled = c.docs.filter(d => d.status === 'complete').length;
+
+tr.innerHTML = `
+  <td><div class="client-cell"><img src="${c.avatar}" /><span>${c.name}</span></div></td>
+  <td>${c.partner}</td>
+  <td>${c.category}</td>
+  <td>${numDocs}</td>
+  <td>${numReview}</td>
+  <td>${numFiled}</td>
+`;
+
     tableBody.appendChild(tr);
   });
 }
 
 populateFilterDropdowns();
+reloadWithFilters();  // trigger fetch
+
 
 filterCategory.onchange = renderTable;
 filterClient.onchange = renderTable;
@@ -617,28 +630,71 @@ filterClient.onchange = renderTable;
     
 
     const feed = document.getElementById('activityFeed');
-const activityEvents = [
-  { user: "Tax Flows", action: "uploaded a document", doc: "Form W-2", ago: "3h ago" },
-  { user: "John Smith", action: "reviewed a document", doc: "Q4 Report 2023", ago: "5h ago" },
-  { user: "Tax Flows", action: "submitted a review request for", doc: "Form 1099-MISC", ago: "1d ago" },
-  { user: "Alice Johnson", action: "uploaded a document", doc: "Expense Report", ago: "1d ago" }
-];
+async function loadActivityFeed() {
+  const partner = me.partner;
+  const url = new URL("https://uwxstszh9l.execute-api.us-east-1.amazonaws.com/default/GetRecentActivity");
+  url.searchParams.set("partner", partner);
 
-activityEvents.forEach(evt => {
+  try {
+    const resp = await fetch(url.toString());
+    const data = await resp.json();
+    const feed = document.getElementById("activityFeed");
+    feed.innerHTML = "";
+
+    (data.recent || []).slice(0, 5).forEach(evt => {
   const li = document.createElement('li');
   li.style.cssText = "display:flex; align-items:center; margin-bottom:.75rem;";
+  
   li.innerHTML = `
     <i class="fas fa-user-circle" style="font-size:1.75rem; margin-right:.75rem; color:var(--primary)"></i>
     <div style="flex:1;">
       <strong>${evt.user}</strong> ${evt.action}<br>
-      <span style="color:var(--muted); font-size:.9rem;">"${evt.doc}" • ${evt.ago}</span>
+      <span style="color:var(--muted); font-size:.9rem; cursor:pointer; text-decoration:underline;" class="doc-link" data-doc="${evt.doc}">
+        "${evt.doc}" • ${evt.ago || 'N/A'}
+      </span>
     </div>
   `;
+
+  li.querySelector(".doc-link").onclick = async () => {
+  const doc = encodeURIComponent(evt.doc);
+  const partner = encodeURIComponent(me.partner);
+  const user = encodeURIComponent(evt.user);
+  const category = encodeURIComponent("Individual");
+
+  const api = "https://uwxstszh9l.execute-api.us-east-1.amazonaws.com/default/GetPresignedDownloadUrl";
+  const url = `${api}?partner=${partner}&user=${user}&doc=${doc}&category=${category}`;
+
+  try {
+    const resp = await fetch(url);
+    const data = await resp.json();
+    if (data.url) {
+      window.open(data.url, "_blank");
+    } else {
+      alert("⚠️ Could not retrieve document link.");
+    }
+  } catch (err) {
+    console.error("❌ Error fetching presigned URL:", err);
+    alert("⚠️ Failed to open document.");
+  }
+};
+
+
   feed.appendChild(li);
 });
 
+  } catch (err) {
+    console.error("❌ Failed to load activity feed", err);
+  }
+}
+
+li.querySelector(".doc-link").onclick = () => openPresignedDoc(evt);
+
+
+
+
 document.querySelectorAll('.nav-buttons button').forEach(btn => {
   btn.onclick = () => {
+    
     document.querySelectorAll('.nav-buttons button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
@@ -660,7 +716,6 @@ toggleBtn.onclick = () => {
 };
 filterCategory.onchange = renderTable;
 filterClient.oninput = renderTable;
-renderTable(); // initial load
 filterCategory.onchange = reloadWithFilters;
 filterClient.oninput = debounce(reloadWithFilters, 400); // optional: debounce to reduce API calls
 
@@ -675,6 +730,9 @@ function reloadWithFilters() {
       console.error("Error loading filtered data:", err);
       alert("Could not load filtered client list.");
     });
+
+    console.log("🔄 Reloading client table with filters...");
+
 }
 
 // Optional: debounce helper
@@ -686,50 +744,157 @@ function debounce(fn, delay) {
   };
 }
 
-document.getElementById("refreshBtn").onclick = async () => {
-  const btn = document.getElementById("refreshBtn");
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+const refreshBtn = document.getElementById("refreshBtn");
+
+refreshBtn.onclick = async () => {
+  refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
   try {
     const resp = await fetch("https://uwxstszh9l.execute-api.us-east-1.amazonaws.com/default/PatchBrokenMetadata", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({})
-});
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({})
+    });
 
-
-    if (!resp.ok) throw new Error("Lambda call failed");
+    if (!resp.ok) throw new Error("Failed");
     const data = await resp.json();
-
     alert(`✅ Fixed ${data.patched.length || "some"} items.`);
-    reloadWithFilters(); // Refresh Admin table after fix
-  } catch (err) {
+    await reloadWithFilters(); // Re-fetch client table
+  } catch (e) {
     alert("❌ Refresh failed.");
-    console.error(err);
+    console.error(e);
   } finally {
-    btn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
   }
 };
 
-localStorage.setItem('clients', JSON.stringify([
-  {
-    name: "Johnny Burton",
-    avatar: "https://i.pravatar.cc/150?u=johnny",
-    category: "Individuals",
-    partner: "BlueRiver CPAs",
-    docs: [
-      {
-        name: "W-2_2023.pdf",
-        desc: "Uploaded tax document",
-        url: "https://example.com/doc1.pdf",
-        status: "incomplete",
-        comment: ""
-      }
-    ]
+
+const allH3s = document.querySelectorAll('div.card h3');
+const clientTitle = Array.from(allH3s).find(h3 => h3.textContent.includes("Client Details") || h3.textContent.includes("Uploaded Docs") || h3.textContent.includes("Docs In Review") || h3.textContent.includes("Filed Docs"));
+
+clientTitle.textContent = "Uploaded Docs"; // or any label dynamically
+
+
+document.getElementById('stat-clients-card').onclick = () => {
+  filterCategory.value = "";
+  filterClient.value = "";
+  clientTitle.textContent = "Client Details";
+  renderTable();
+};
+
+document.getElementById('stat-docs').parentNode.onclick = () => {
+  const filtered = clients.filter(c => c.docs.length > 0);
+
+  // ✅ Sort by most recent doc timestamp (descending)
+  filtered.sort((a, b) => {
+    const aTime = Math.max(...a.docs.map(d => new Date(d.timestamp || d.createdAt || 0)));
+    const bTime = Math.max(...b.docs.map(d => new Date(d.timestamp || d.createdAt || 0)));
+    return bTime - aTime;
+  });
+
+  clientTitle.textContent = "Uploaded Docs";
+  renderFilteredClients(filtered);
+};
+
+
+document.getElementById('stat-review').parentNode.onclick = () => {
+  const filtered = clients.filter(c => c.docs.some(d => d.status === 'inprogress'));
+  clientTitle.textContent = "Docs In Review";
+  renderFilteredClients(filtered);
+};
+
+document.getElementById('stat-filed').parentNode.onclick = () => {
+  const filtered = clients.filter(c => c.docs.every(d => d.status === 'complete'));
+  clientTitle.textContent = "Filed Docs";
+  renderFilteredClients(filtered);
+};
+
+
+function renderFilteredClients(data) {
+  tableBody.innerHTML = '';
+  data.forEach((c, i) => {
+    const tags = `<span class="badge tag-pill">${c.docs.length} docs</span>`;
+    const all = c.docs.every(d => d.status === 'complete')
+      ? 'complete'
+      : c.docs.every(d => d.status === 'incomplete')
+        ? 'incomplete'
+        : 'inprogress';
+
+    const tr = document.createElement('tr');
+tr.dataset.idx = i;
+
+const numDocs = c.docs.length;
+const numReview = c.docs.filter(d => d.status === 'inprogress').length;
+const numFiled = c.docs.filter(d => d.status === 'complete').length;
+
+tr.innerHTML = `
+  <td><div class="client-cell"><img src="${c.avatar}" /><span>${c.name}</span></div></td>
+  <td>${c.partner}</td>
+  <td>${c.category}</td>
+  <td>${numDocs}</td>
+  <td>${numReview}</td>
+  <td>${numFiled}</td>
+`;
+
+    tableBody.appendChild(tr);
+  });
+}
+
+
+docsContainer.querySelectorAll('.btn-approve').forEach(b =>
+  b.onclick = () => {
+    c.docs[b.dataset.idx].status = 'complete';
+    saveAndRefresh(idx);
+  });
+
+docsContainer.querySelectorAll('.btn-deny').forEach(b =>
+  b.onclick = () => {
+    c.docs[b.dataset.idx].status = 'inprogress';
+    saveAndRefresh(idx);
+  });
+
+
+docsContainer.querySelectorAll('.btn-approve').forEach(b =>
+  b.onclick = () => {
+    c.docs[b.dataset.idx].status = 'complete';
+    
+    const card = b.closest('.detail-card');
+    card.querySelector('.btn-deny')?.remove();
+    card.querySelector('.comment-box')?.remove();
+    b.textContent = "✔ Approved";
+    b.disabled = true;
+
+    saveAndRefresh(idx);
+  });
+
+  async function openPresignedDoc(evt) {
+  const doc = encodeURIComponent(evt.doc);
+  const partner = encodeURIComponent(me.partner);
+  const user = encodeURIComponent(evt.user);
+  const category = encodeURIComponent("Individual"); // or derive from evt if needed
+
+  const api = "https://uwxstszh9l.execute-api.us-east-1.amazonaws.com/default/GetPresignedDownloadUrl";
+  const url = `${api}?partner=${partner}&user=${user}&doc=${doc}&category=${category}`;
+
+  try {
+    const resp = await fetch(url);
+    const data = await resp.json();
+    if (data.url) {
+      window.open(data.url, "_blank");
+    } else {
+      alert("⚠️ Could not retrieve document link.");
+    }
+  } catch (err) {
+    console.error("❌ Error fetching presigned URL:", err);
+    alert("⚠️ Failed to open document.");
   }
-]));
+}
+
+
+populateFilterDropdowns();
+reloadWithFilters(); // DO NOT call renderTable() directly
+loadActivityFeed();
+
 
   </script>
 </body>

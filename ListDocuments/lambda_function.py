@@ -3,18 +3,16 @@ import os
 import boto3
 from collections import defaultdict
 from boto3.dynamodb.conditions import Key
+from datetime import datetime
 
 # AWS clients
 dynamodb = boto3.resource('dynamodb')
 s3 = boto3.client('s3')
 
-# Constants
+# Env vars
 BUCKET = os.environ.get('BUCKET_NAME', 'taxflowsai-uploads')
 TABLE_NAME = os.environ.get('TABLE_NAME', 'TaxFlowsAI_Metadata')
-DEFAULT_CATEGORY = "Individual"
-DEFAULT_FILENAME = "Untitled.pdf"
 table = dynamodb.Table(TABLE_NAME)
-
 
 def cors_headers():
     return {
@@ -24,11 +22,10 @@ def cors_headers():
         'Access-Control-Allow-Headers': 'Content-Type,Authorization'
     }
 
-
 def lambda_handler(event, context):
     print("📍 Lambda started")
 
-    # CORS preflight
+    # Handle CORS preflight
     if event.get("httpMethod") == "OPTIONS":
         return {
             "statusCode": 200,
@@ -38,7 +35,7 @@ def lambda_handler(event, context):
 
     params = event.get('queryStringParameters') or {}
     partner = params.get('partner')
-    category = params.get('category', DEFAULT_CATEGORY)
+    category = params.get('category', 'Individual')
     name_filter = params.get('name', '').lower()
 
     if not partner:
@@ -50,21 +47,22 @@ def lambda_handler(event, context):
 
     print("🔍 Querying GSI with:", {"partner": partner, "category": category})
 
-    # Paginated query
+    # Paginated DynamoDB query
     items = []
-    exclusive_start_key = None
+    last_evaluated_key = None
+
     while True:
-        kwargs = {
+        query_kwargs = {
             'IndexName': 'PartnerCategoryIndex',
             'KeyConditionExpression': Key('partner').eq(partner) & Key('category').eq(category)
         }
-        if exclusive_start_key:
-            kwargs['ExclusiveStartKey'] = exclusive_start_key
+        if last_evaluated_key:
+            query_kwargs['ExclusiveStartKey'] = last_evaluated_key
 
         try:
-            response = table.query(**kwargs)
+            response = table.query(**query_kwargs)
         except Exception as e:
-            print("❌ DynamoDB error:", e)
+            print("❌ DynamoDB error:", str(e))
             return {
                 'statusCode': 500,
                 'headers': cors_headers(),
@@ -72,28 +70,26 @@ def lambda_handler(event, context):
             }
 
         page_items = response.get('Items', [])
-
         if name_filter:
             page_items = [i for i in page_items if name_filter in (i.get('user') or '').lower()]
-
         items.extend(page_items)
-        exclusive_start_key = response.get('LastEvaluatedKey')
-        if not exclusive_start_key:
+
+        last_evaluated_key = response.get('LastEvaluatedKey')
+        if not last_evaluated_key:
             break
 
     print(f"✅ Retrieved {len(items)} items")
 
-    # Group results
+    # Grouping by user
     grouped = defaultdict(lambda: {'docs': []})
+
     for i in items:
         user_key = i.get('user')
         if not user_key:
             print(f"⚠️ Skipping item with no user: {i}")
             continue
 
-        filename = i.get('filename', DEFAULT_FILENAME)
         s3_key = i.get('s3Key')
-
         if not isinstance(s3_key, str) or not s3_key.strip():
             print(f"⚠️ Skipping item with bad s3Key: {i}")
             continue
@@ -105,8 +101,11 @@ def lambda_handler(event, context):
                 ExpiresIn=3600
             )
         except Exception as e:
-            print(f"⚠️ Error generating URL for {s3_key}: {e}")
+            print(f"⚠️ Failed to generate presigned URL for {s3_key}: {e}")
             continue
+
+        filename = i.get('filename', 'Untitled.pdf')
+        timestamp = i.get('timestamp', datetime.utcnow().isoformat())
 
         grouped[user_key].update({
             'name': user_key,
@@ -120,10 +119,11 @@ def lambda_handler(event, context):
             'desc': filename.replace('_', ' ').replace('.pdf', ''),
             'status': i.get('status', 'incomplete'),
             'url': presigned_url,
-            'comment': i.get('comment', '')
+            'comment': i.get('comment', ''),
+            'timestamp': timestamp
         })
 
-    print(f"📤 Returning {len(grouped)} grouped clients")
+    print(f"📤 Returning {len(grouped)} grouped users")
 
     return {
         'statusCode': 200,
