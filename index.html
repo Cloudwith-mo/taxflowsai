@@ -12,3 +12,330 @@
 </body>
 </html>
 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>TaxFlowsAI — Your AI-Powered Tax Assistant</title>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous"
+  />
+  <style>
+    :root {
+      --bg: #0d1a2e;
+      --card-bg: #1e2a44;
+      --primary: #2979ff;
+      --text: #e5e7eb;
+      --muted: #8f98a5;
+      --shadow: rgba(0,0,0,0.3);
+    }
+    * { box-sizing: border-box; margin:0; padding:0 }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", sans-serif;
+      line-height:1.5;
+    }
+    a { text-decoration: none; }
+    header, section { max-width:800px; margin:auto; padding:2rem 1rem }
+    header { text-align:center }
+    .logo { font-size:2rem; display:inline-flex; align-items:center; gap:.5rem }
+    .logo i { color: var(--primary) }
+    h1 { margin-top:.5rem; font-size:2rem }
+    p.subtitle { color: var(--muted); margin-top:1rem }
+    .btn-primary, .btn-secondary {
+      display:inline-block;
+      padding:.75rem 1.5rem;
+      border-radius:8px;
+      font-weight:500;
+      margin-top:1.5rem;
+      transition:background .2s,color .2s;
+    }
+    .btn-primary {
+      background:var(--primary);
+      color:#fff;
+    }
+    .btn-primary:hover {
+      background:#1d5fd9;
+    }
+    .btn-secondary {
+      background:none;
+      color:var(--primary);
+      border:1px solid var(--primary);
+      margin-left:1rem;
+    }
+    .btn-secondary:hover {
+      background:rgba(41,121,255,0.1);
+    }
+
+    /* Features */
+    .features {
+      display:grid;
+      grid-template-columns:1fr;
+      gap:1rem;
+      margin-top:2rem;
+    }
+    @media(min-width:600px){
+      .features { grid-template-columns:1fr 1fr; }
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius:8px;
+      padding:1.5rem;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
+      box-shadow:0 4px 12px var(--shadow);
+    }
+    .card i {
+      font-size:2.25rem;
+      color:var(--primary);
+      margin-bottom:1rem;
+    }
+    .card h3 { margin-bottom:.75rem; font-size:1.1rem }
+    .card p { color:var(--muted); font-size:.9rem; line-height:1.4 }
+
+    /* Benefits */
+    .benefits { list-style:none; margin:2rem auto; max-width:600px; }
+    .benefits li {
+      padding-left:1.5rem; margin-bottom:1rem; position:relative; font-size:1rem;
+    }
+    .benefits li:before {
+      content:"✓"; position:absolute; left:0; color:var(--primary);
+    }
+
+    /* Testimonials */
+    #testimonials { margin:3rem auto; text-align:center }
+    #testimonials h2 { margin-bottom:1rem }
+    .testimonials-grid {
+      display:grid;
+      gap:1.5rem;
+      grid-template-columns:1fr;
+    }
+    @media(min-width:600px){
+      .testimonials-grid { grid-template-columns:1fr 1fr; }
+    }
+    .testimonial {
+      background:var(--card-bg);
+      border-radius:8px;
+      padding:1.5rem;
+      box-shadow:0 4px 12px var(--shadow);
+      font-style:italic;
+    }
+    .testimonial p { margin-bottom:1rem }
+    .testimonial .author {
+      margin-top:.5rem; font-weight:bold; font-style:normal; color:var(--text);
+    }
+
+    /* Pricing */
+    #pricing { text-align:center; margin-top:2rem }
+    #pricing h2 { margin-bottom:1rem }
+    .plans {
+      display:grid;
+      grid-template-columns:1fr;
+      gap:1.5rem;
+    }
+    @media(min-width:600px){
+      .plans { grid-template-columns:1fr 1fr 1fr; }
+    }
+    .plan {
+      background:var(--card-bg);
+      border-radius:8px;
+      padding:1.5rem;
+      box-shadow:0 4px 12px var(--shadow);
+      text-align:center;
+    }
+    .plan h4 { margin-bottom:.5rem }
+    .plan .price {
+      font-size:1.75rem;
+      color:var(--primary);
+      margin:1rem 0;
+    }
+    .plan ul { list-style:none; color:var(--muted); margin-bottom:1rem; padding:0 }
+    .plan ul li { margin:.5rem 0 }
+    .plan a {
+      display:inline-block;
+      background:var(--primary);
+      color:#fff;
+      padding:.5rem 1rem;
+      border-radius:6px;
+    }
+
+    /* Contact */
+    #contact { margin:3rem auto; text-align:center }
+    #contact h2 { margin-bottom:.5rem }
+    #contact p { color:var(--muted); margin-bottom:1rem }
+    #contact form { max-width:500px; margin:auto; text-align:left }
+    .input-group { margin-bottom:1rem }
+    .input-group label { display:block; margin-bottom:.25rem; color:var(--text) }
+    .input-group input,
+    .input-group textarea {
+      width:100%;
+      padding:.5rem;
+      border:none;
+      border-radius:6px;
+      background:var(--card-bg);
+      color:var(--text);
+      font-size:1rem;
+    }
+    .input-group textarea { resize:vertical; min-height:100px }
+    #contact button {
+      width:100%; background:var(--primary); color:#fff;
+      padding:.75rem; border:none; border-radius:6px;
+      cursor:pointer; font-size:1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <header>
+    <div class="logo">
+      <i class="fas fa-cloud"></i><span>TaxFlowsAI</span>
+    </div>
+    <h1>Your AI-Powered Tax Assistant</h1>
+    <p class="subtitle">
+      AI, Automation &amp; Cloud combine to handle uploads, status, e-sign &amp; chat—so you focus on advising clients.
+    </p>
+    <a href="https://calendly.com/taxflowsai?email=taxflowsai%40gmail.com" class="btn-primary">
+      Book a 10-Min Demo
+    </a>
+    <a href="taxflowsai-login.html" class="btn-secondary">Go to App</a>
+
+  </header>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="features">
+      <div class="card">
+        <i class="fas fa-upload"></i>
+        <h3>Easy Document Upload</h3>
+        <p>Drag &amp; drop any form—stored securely in the cloud, available 24/7.</p>
+      </div>
+      <div class="card">
+        <i class="fas fa-chart-line"></i>
+        <h3>Live Status Tracking</h3>
+        <p>AI-driven updates: see what’s pending, under review, or filed instantly.</p>
+      </div>
+      <div class="card">
+        <i class="fas fa-pen-fancy"></i>
+        <h3>One-Click E-Sign</h3>
+        <p>No printing: e-sign right in your portal with our AI-integrated flow.</p>
+      </div>
+      <div class="card">
+        <i class="fas fa-robot"></i>
+        <h3>Smart AI Chat</h3>
+        <p>Ask Lily for guidance, status, or next steps—answered instantly by AI.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BENEFITS -->
+  <section>
+    <h2 style="text-align:center; margin-bottom:1rem">Key Benefits</h2>
+    <ul class="benefits">
+      <li>Save ~150 hrs/month by automating intake, follow-ups, e-sign &amp; status tracking.</li>
+      <li>Eliminate misplaced paperwork and endless back-and-forth emails.</li>
+      <li>Reduce errors with AI-driven validation.</li>
+      <li>Secure, cloud-based storage keeps you compliant and accessible anywhere.</li>
+    </ul>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section id="testimonials">
+    <h2>What Tax Pros Are Saying</h2>
+    <div class="testimonials-grid">
+      <div class="testimonial">
+        <p>"Since adopting TaxFlowsAI, our document processing time dropped by 60%. Clients love the instant status updates and easy e-sign flow."</p>
+        <div class="author">— Sarah Lopez, CPA at Lopez Tax Advisors</div>
+      </div>
+      <div class="testimonial">
+        <p>"TaxFlowsAI’s AI chat answers our questions immediately—no more phone tag. Perfect for our small law firm."</p>
+        <div class="author">— Michael Grant, Tax Attorney at Grant &amp; Co.</div>
+      </div>
+      <div class="testimonial">
+        <p>"Cloud-based uploads and real-time tracking mean no lost files or manual follow-ups. Highly recommend."</p>
+        <div class="author">— Priya Desai, Senior Accountant at Desai Financials</div>
+      </div>
+      <div class="testimonial">
+        <p>"Clients upload once and can see every step. We save time, reduce errors, and deliver top service."</p>
+        <div class="author">— James Chen, Owner at Precision Tax Services</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <h2>Simple 3-Tier Pricing</h2>
+    <div class="plans">
+      <!-- Free Tier -->
+      <div class="plan">
+        <h4>Free</h4>
+        <div class="price">$0<span>/mo</span></div>
+        <ul>
+          <li>&lt; 100 clients</li>
+          <li>Document uploads &amp; basic tracking</li>
+          <li>AI chat support</li>
+        </ul>
+        <a href="mailto:taxflowsai@gmail.com?subject=Free%20Tier" class="btn-primary" target="_blank">
+
+          Sign Up Free
+        </a>
+      </div>
+      <!-- Starter Tier -->
+      <div class="plan">
+        <h4>Starter</h4>
+        <div class="price">$499<span>/mo</span></div>
+        <ul>
+          <li>Up to 100 clients</li>
+          <li>One-click e-sign &amp; live status</li>
+          <li>Cloud backups &amp; analytics</li>
+        </ul>
+        <a href="mailto:taxflowsai@gmail.com?subject=Starter%20Plan" class="btn-primary">
+          Get Started
+        </a>
+      </div>
+      <!-- Growth Tier -->
+      <div class="plan">
+        <h4>Growth</h4>
+        <div class="price">$1,499<span>/mo</span></div>
+        <ul>
+          <li>Up to 500 clients</li>
+          <li>Advanced AI &amp; automation</li>
+          <li>Usage &amp; “Hours Saved” analytics</li>
+        </ul>
+        <a href="mailto:taxflowsai@gmail.com?subject=Growth%20Plan" class="btn-primary">
+          Get Started
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <h2>Contact Us</h2>
+    <p>Questions? Custom quote? Let’s talk.</p>
+    <form>
+      <div class="input-group">
+        <label for="contact-name">Your Name</label>
+        <input type="text" id="contact-name" placeholder="John Doe" required>
+      </div>
+      <div class="input-group">
+        <label for="contact-email">Email</label>
+        <input type="email" id="contact-email" placeholder="you@example.com" required>
+      </div>
+      <div class="input-group">
+        <label for="contact-message">Message</label>
+        <textarea id="contact-message" placeholder="How can we help you?" required></textarea>
+      </div>
+      <button type="submit">Send Message</button>
+    </form>
+  </section>
+
+</body>
+</html>
