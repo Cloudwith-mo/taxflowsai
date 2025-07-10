@@ -1,11 +1,11 @@
-name: Deploy UI to GitHub Pages
+name: Deploy Static UI to GitHub Pages
 
 on:
   push:
     branches:
       - main
     paths:
-      - "frontend/**"  # Change to your actual frontend folder
+      - "frontend/**"
 
 jobs:
   deploy:
@@ -13,22 +13,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout
+      - name: Checkout Code explicitly
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Install Dependencies & Build
-        working-directory: ./frontend  # explicitly set to your frontend dir
-        run: |
-          npm install
-          npm run build
-
-      - name: Deploy to GitHub Pages
+      - name: Explicitly Deploy HTML Files to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./frontend/build
+          publish_dir: ./frontend
