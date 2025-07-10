@@ -1,0 +1,4 @@
+*.zip
+!.gitignore
+!lambda/set_admin_category.zip
+!lambda/tag_generator.zip
