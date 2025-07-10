@@ -43,11 +43,11 @@ resource "aws_lambda_permission" "allow_cognito" {
 }
 
 resource "aws_lambda_function" "get_upload_url" {
-  function_name = "GetUploadUrl"
-  runtime       = "python3.12"
-  role          = aws_iam_role.lambda_exec.arn
-  handler       = "getuploadurl.lambda_handler"
-  filename      = "lambda/getuploadurl.zip"
+  function_name    = "GetUploadUrl"
+  runtime          = "python3.12"
+  role             = aws_iam_role.lambda_exec.arn
+  handler          = "getuploadurl.lambda_handler"
+  filename         = "lambda/getuploadurl.zip"
   source_code_hash = filebase64sha256("lambda/getuploadurl.zip")
 
   environment {
@@ -59,11 +59,11 @@ resource "aws_lambda_function" "get_upload_url" {
 }
 
 resource "aws_lambda_function" "list_documents" {
-  function_name = "ListDocuments"
-  runtime       = "python3.12"
-  role          = aws_iam_role.lambda_exec.arn
-  handler       = "listdocuments.lambda_handler"
-  filename      = "lambda/listdocuments.zip"
+  function_name    = "ListDocuments"
+  runtime          = "python3.12"
+  role             = aws_iam_role.lambda_exec.arn
+  handler          = "listdocuments.lambda_handler"
+  filename         = "lambda/listdocuments.zip"
   source_code_hash = filebase64sha256("lambda/listdocuments.zip")
 
   environment {
@@ -75,22 +75,22 @@ resource "aws_lambda_function" "list_documents" {
 }
 
 resource "aws_lambda_function" "patch_metadata" {
-  function_name = "PatchBrokenMetadata"
-  runtime       = "python3.12"
-  role          = aws_iam_role.lambda_exec.arn
-  handler       = "lambda_patch.lambda_handler"
-  filename      = "lambda/lambda_patch.zip"
+  function_name    = "PatchBrokenMetadata"
+  runtime          = "python3.12"
+  role             = aws_iam_role.lambda_exec.arn
+  handler          = "lambda_patch.lambda_handler"
+  filename         = "lambda/lambda_patch.zip"
   source_code_hash = filebase64sha256("lambda/lambda_patch.zip")
 }
 
 resource "aws_lambda_function" "tag_generator" {
-  function_name = "bedrock-doc-tag-generator"
-  runtime       = "python3.12"
-  role          = aws_iam_role.lambda_exec.arn
-  handler       = "tag_generator.lambda_handler"
-  filename      = "lambda/tag_generator.zip"
+  function_name    = "bedrock-doc-tag-generator"
+  runtime          = "python3.12"
+  role             = aws_iam_role.lambda_exec.arn
+  handler          = "tag_generator.lambda_handler"
+  filename         = "lambda/tag_generator.zip"
   source_code_hash = filebase64sha256("lambda/tag_generator.zip")
-  timeout       = 20
+  timeout          = 20
 
   environment {
     variables = {
@@ -106,9 +106,9 @@ resource "aws_iam_policy" "lambda_bedrock_access" {
     Version = "2012-10-17",
     Statement = [
       {
-        Effect: "Allow",
-        Action: ["bedrock:InvokeModel"],
-        Resource: "*"
+        Effect : "Allow",
+        Action : ["bedrock:InvokeModel"],
+        Resource : "*"
       }
     ]
   })
@@ -123,7 +123,7 @@ resource "aws_iam_role_policy_attachment" "attach_bedrock" {
 
 resource "aws_cognito_user_pool" "taxflowsai_user_pool_v2" {
   name = "taxflowsai-user-pool-v2"
-  
+
   auto_verified_attributes = ["email"]
 
   schema {
@@ -161,7 +161,7 @@ resource "aws_cognito_user_pool" "taxflowsai_user_pool_v2" {
 resource "aws_cognito_user_pool_client" "app_client" {
   name         = "taxflowsai-app-client"
   user_pool_id = aws_cognito_user_pool.taxflowsai_user_pool_v2.id
-  
+
   explicit_auth_flows = [
     "ALLOW_USER_PASSWORD_AUTH",
     "ALLOW_REFRESH_TOKEN_AUTH"
