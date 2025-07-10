@@ -1,0 +1,5 @@
+*.zip
+!.gitignore
+!terraform/lambda/set_admin_category.zip
+!terraform/lambda/tag_generator.zip
+
