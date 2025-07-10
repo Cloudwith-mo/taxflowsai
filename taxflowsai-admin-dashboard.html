@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>TaxFlowsAI Admin</title>
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous"
+  />
+  <style>
+    :root {
+      --bg: #0d1a2e;
+      --card-bg: #1e2a44;
+      --primary: #2979ff;
+      --text: #e5e7eb;
+      --muted: #8f98a5;
+      --shadow: rgba(0,0,0,0.4);
+      --incomplete: #6e2c2c;
+      --inprogress: #6e5319;
+      --complete: #165c43;
+    }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0 }
+    body { background:var(--bg); color:var(--text); font-family:"Segoe UI",sans-serif; }
+    a { color:var(--primary); text-decoration:none }
+    .container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 2rem 1rem;
+}
+
+
+    
+
+    /* MAIN CONTENT */
+    .content { flex:1; padding:2rem 1rem }
+    .header {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:.5rem;
+    }
+    .header-left { display:flex; align-items:center; gap:.5rem; }
+    .header-left i { font-size:2rem; color:var(--primary) }
+    .header-left h1 { font-size:1.5rem; font-weight:500 }
+    .header-right button {
+      background:rgba(255,255,255,0.05); border:none;
+      padding:.5rem; border-radius:8px; cursor:pointer;
+      transition:background .2s;
+    }
+    .header-right button:hover { background:rgba(41,121,255,0.2) }
+    .header-right i { color:var(--text); font-size:1.25rem }
+    hr { border:none; height:1px; background:rgba(255,255,255,0.1); margin:1rem 0 }
+    .breadcrumb { font-size:.9rem; color:var(--muted) }
+    .breadcrumb a { color:var(--primary) }
+    .breadcrumb span { margin:0 .25rem; color:var(--text) }
+    .greeting { font-size:2rem; font-weight:600; margin:.5rem 0 }
+    .subtext { font-size:1.1rem; color:var(--muted); margin-bottom:1.5rem }
+
+    /* LIST CARD */
+    .card {
+      background:var(--card-bg); border-radius:12px;
+      padding:1.25rem; box-shadow:0 4px 12px var(--shadow);
+      margin-bottom:2rem;
+    }
+    .card-header {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:1rem;
+    }
+    .card-header h3 { font-size:1.5rem; font-weight:500 }
+    .filters { display:flex; gap:1rem }
+    .filters select {
+      background:var(--card-bg); border:1px solid var(--muted);
+      color:var(--text); padding:.5rem .75rem; border-radius:8px;
+      font-size:.95rem; appearance:none; cursor:pointer;
+    }
+    table { width:100%; border-collapse:collapse }
+    thead th {
+      text-align:left; padding:.75rem 1rem; font-size:.95rem;
+      color:var(--muted); border-bottom:1px solid rgba(255,255,255,0.1);
+    }
+    tbody tr { cursor:pointer; transition:background .2s }
+    tbody tr:hover { background:rgba(255,255,255,0.05) }
+    tbody td {
+      padding:.75rem 1rem; font-size:1rem;
+      border-bottom:1px solid rgba(255,255,255,0.1);
+    }
+    .client-cell {
+      display:flex; align-items:center; gap:.75rem;
+    }
+    .client-cell img {
+      width:36px; height:36px; border-radius:50%; object-fit:cover;
+    }
+    .badge {
+      padding:.25rem .5rem; border-radius:6px; font-size:.85rem;
+      font-weight:500; color:#fff;
+    }
+    .badge.incomplete { background:var(--incomplete) }
+    .badge.inprogress { background:var(--inprogress) }
+    .badge.complete { background: #165c43; border-radius: 50px; padding: .3rem .8rem; }
+.badge.inprogress { background: #6e5319; border-radius: 50px; padding: .3rem .8rem; }
+.badge.incomplete { background: #6e2c2c; border-radius: 50px; padding: .3rem .8rem; }
+
+
+    /* DETAIL VIEW */
+    .detail { display:none }
+    .detail-header { margin-bottom:1.5rem }
+    .detail-header .breadcrumb {
+      font-size:.9rem; color:var(--muted); margin-bottom:.5rem;
+    }
+    .detail-header .breadcrumb a { color:var(--primary) }
+    .detail-header .breadcrumb span { margin:0 .3rem; color:var(--text) }
+    .detail-header h2 {
+      font-size:2.25rem; font-weight:600; margin:0;
+    }
+    .detail-card {
+      background:var(--card-bg); border:1px solid rgba(255,255,255,0.1);
+      border-radius:12px; padding:1rem; margin-bottom:1.5rem;
+      box-shadow:0 4px 12px var(--shadow);
+    }
+    .detail-card .card-title {
+      font-size:1.25rem; font-weight:500; margin-bottom:1rem;
+    }
+    .doc-entry {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:.75rem;
+    }
+    .doc-icon { font-size:1.75rem; color:var(--primary) }
+    .doc-info { flex:1; margin:0 1rem }
+    .doc-name { font-size:1rem; font-weight:500 }
+    .doc-desc { font-size:.9rem; color:var(--muted); margin-top:.25rem }
+    .btn-view {
+      background:var(--primary); color:#fff; border:none;
+      padding:.5rem 1rem; border-radius:6px; cursor:pointer;
+      font-size:.9rem; transition:background .2s;
+    }
+    .btn-view:hover { background:#1a73e8 }
+    .actions-container { display:flex; gap:1rem; margin-bottom:1rem }
+    .btn-approve, .btn-deny {
+      flex:1; padding:.75rem; font-size:1rem; font-weight:500;
+      border:none; border-radius:8px; cursor:pointer;
+      transition:background .2s;
+    }
+    .btn-approve { background:var(--complete); color:#fff }
+    .btn-deny    { background:var(--incomplete); color:#fff }
+    .btn-approve:hover { background:#1a8f60 }
+    .btn-deny:hover    { background:#7a312f }
+    .comment-box {
+      width:100%; padding:.75rem; border-radius:8px;
+      background:var(--card-bg); border:1px solid rgba(255,255,255,0.1);
+      color:var(--text); min-height:5rem; resize:vertical;
+      margin-bottom:1rem; font-size:.95rem;
+    }
+    .back-btn {
+      background:none; border:none; color:var(--primary);
+      font-size:.9rem; cursor:pointer;
+    }
+
+    /* SETTINGS MODAL */
+    .modal-overlay {
+      position:fixed; top:0; left:0; width:100vw; height:100vh;
+      background:rgba(0,0,0,0.6); display:flex; align-items:center;
+      justify-content:center; z-index:1000;
+    }
+    .modal-overlay.hidden { display:none }
+    .modal {
+      background:var(--card-bg); border-radius:12px; padding:1.5rem;
+      box-shadow:0 8px 24px var(--shadow); max-width:320px; width:90%;
+    }
+    .modal-header {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:1rem;
+    }
+    .modal-header h2 { font-size:1.25rem }
+    .modal-close {
+      background:none; border:none; font-size:1.25rem;
+      color:var(--text); cursor:pointer;
+    }
+    .settings-profile strong { display:block; font-size:1.1rem; margin-bottom:.5rem; }
+    .settings-profile span {
+      display:block; color:var(--muted); font-size:.9rem; margin-bottom:.5rem;
+    }
+    .settings-divider {
+      border:none; height:1px; background:rgba(255,255,255,0.1); margin:1rem 0;
+    }
+    .logout-btn {
+      width:100%; padding:.5rem; background:none; border:1px solid var(--muted);
+      border-radius:6px; color:var(--muted); cursor:pointer;
+      transition:background .2s,color .2s;
+    }
+    .logout-btn:hover {
+      background:var(--text); color:var(--bg);
+    }
+
+    .card > div {
+  padding: 1rem;
+}
+
+.nav-buttons button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+
+.filters-row select {
+  padding: .6rem .75rem;
+  background: var(--card-bg);
+  border: 1px solid var(--muted);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: .95rem;
+}
+.filters-row input[type="text"]::placeholder {
+  color: var(--muted);
+}
+
+.filters-row select,
+.filters-row input[type="text"] {
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: var(--card-bg);
+  border: 1px solid var(--muted);
+  color: var(--text);
+  min-width: 180px;
+}
+
+.badge.tag-pill {
+  background: var(--primary);
+  border-radius: 50px;
+  padding: .35rem .75rem;
+  margin-right: .5rem;
+  font-weight: 500;
+  font-size: .8rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+#activityCard {
+  transition: max-height 0.4s ease, opacity 0.4s ease;
+  overflow: hidden;
+}
+#activityCard.hidden {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+  margin: 0;
+}
+
+
+  </style>
+</head>
+<body>
+<div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+  <div>
+    <div style="display: flex; align-items: center; gap: .75rem;">
+      <i class="fas fa-cloud" style="font-size: 1.5rem; color: var(--primary);"></i>
+      <h1 style="font-size: 1.75rem; margin: 0;">TaxFlows<span style="color: var(--primary)">AI</span></h1>
+    </div>
+    <p style="color: var(--muted); font-size: 1rem; margin-top: .25rem;">Overview & Filtered View</p>
+  </div>
+ <div style="display: flex; align-items: center; gap: 1rem;">
+  <!-- Refresh Button -->
+  <button id="refreshBtn" title="Refresh & Fix Metadata" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer;">
+    <i class="fas fa-sync-alt"></i>
+  </button>
+
+  <!-- Gear (Settings) Button -->
+  <button id="settingsBtnHeader" style="background: none; border: none; color: white; font-size: 1.25rem;">
+    <i class="fas fa-cog"></i>
+  </button>
+</div>
+
+</div>
+
+
+
+  <div class="container">
+  <hr />
+
+  <div class="greeting" id="greet">Welcome, [Admin Name]</div>
+<div class="subtext" id="subtext">You're viewing: Individual Clients</div>
+
+<div class="filters-row" style="display:flex; gap:1rem; margin:1.5rem 0;">
+  <input type="text" id="partnerDisplay" disabled style="flex:1; padding:.6rem .75rem; background:var(--card-bg); border:1px solid var(--muted); border-radius:8px; color:var(--text);" />
+  <select id="filterCategory" style="flex:1;"></select>
+  <input type="text" id="filterClient" placeholder="Search by name..." style="flex:2; padding:.6rem .75rem; border-radius:8px; background:var(--card-bg); border:1px solid var(--muted); color:var(--text);" />
+</div>
+
+
+
+<div class="stats" style="display:flex; gap:1rem; margin-bottom:2rem;">
+  <div class="card" style="flex:1; text-align:center;">
+    <h2 id="stat-clients" style="font-size:2rem;">0</h2>
+    <p style="color:var(--muted);">Total Clients</p>
+  </div>
+  <div class="card" style="flex:1; text-align:center;">
+    <h2 id="stat-docs" style="font-size:2rem;">0</h2>
+    <p style="color:var(--muted);">Uploaded Docs</p>
+  </div>
+  <div class="card" style="flex:1; text-align:center;">
+    <h2 id="stat-review" style="font-size:2rem;">0</h2>
+    <p style="color:var(--muted);">In Review</p>
+  </div>
+  <div class="card" style="flex:1; text-align:center;">
+    <h2 id="stat-filed" style="font-size:2rem;">0</h2>
+    <p style="color:var(--muted);">Filed</p>
+  </div>
+</div>
+
+<div style="text-align:center; margin-top:-1rem;">
+  <button id="toggleActivity" style="background:none; border:none; color:var(--muted); font-size:1.5rem; cursor:pointer;">⬇</button>
+</div>
+
+
+  <!-- ACTIVITY FEED -->
+  <div id="activityCard" class="card">
+  <h3 style="margin-bottom:1rem;">Activity Feed</h3>
+
+    <ul id="activityFeed" style="list-style:none; padding:0; margin:0;">
+      <!-- JS will populate -->
+    </ul>
+  </div>
+
+
+<div class="card">
+  <h3 style="margin-bottom:1rem;">Client Details</h3>
+  <table style="width:100%; border-collapse:collapse;">
+    <thead>
+  <tr>
+    <th>Client Name</th>
+    <th>Partner</th>
+    <th>Category</th>
+    <th># Docs</th>
+    <th>In Review</th>
+    <th>Filed</th>
+  </tr>
+</thead>
+
+    <tbody id="clientDetailsBody"></tbody>
+  </table>
+</div>
+
+
+  
+
+  <!-- SETTINGS MODAL -->
+  <div id="settingsModal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Settings</h2>
+        <button id="closeSettingsModal" class="modal-close">&times;</button>
+      </div>
+      <div class="settings-profile">
+        <strong id="profileName">…</strong>
+        <span id="profileEmail">…</span>
+        <span id="profilePartner">…</span>
+      </div>
+      <hr class="settings-divider"/>
+      <button id="logoutModalBtn" class="logout-btn">Logout</button>
+    </div>
+  </div>
+
+  <!-- Detail View Container -->
+<div id="detailView" class="detail" style="display: none;">
+  <div class="detail-header">
+    <div class="breadcrumb">
+      <a href="#">Dashboard</a>
+      <span>/</span>
+      <span id="crumbCategory">...</span>
+      <span>/</span>
+      <span id="crumbClient">...</span>
+    </div>
+    <h2 id="detailName">Client Name</h2>
+  </div>
+  <div id="docsContainer"></div>
+</div>
+
+<!-- Optional: Placeholder for listCard -->
+<div id="listCard" style="display: block;"></div>
+
+<div class="card" id="stat-clients-card" style="flex:1; text-align:center;">...</div>
+
+  <script>
+    
+    // AUTH & PROFILE
+    const CURRENT = localStorage.getItem('currentUser');
+let me = null;
+
+try {
+  me = typeof CURRENT === 'string' ? JSON.parse(CURRENT) : CURRENT;
+  if (!me || me['custom:role'] !== 'admin') {
+    throw new Error('Invalid or missing admin profile');
+  }
+} catch (err) {
+  console.error('Auth error:', err);
+  localStorage.removeItem('currentUser');
+  location.replace('taxflowsai-login.html');
+}
+
+me.partner = me['custom:partner'];
+document.getElementById('partnerDisplay').value = `Partner: ${me.partner}`;
+
+document.getElementById('partnerDisplay').value = `Network: ${me.partner}`;
+
+me.role = me['custom:role'];
+me.category = me['custom:category'];
+
+    // HEADER GREETING
+    document.getElementById('greet').textContent = `Welcome, ${me.name}`;
+
+    
+
+    // SETTINGS MODAL ELEMENTS
+    const settingsBtnHeader = document.getElementById('settingsBtnHeader');
+    const settingsModal     = document.getElementById('settingsModal');
+    const closeSettings     = document.getElementById('closeSettingsModal');
+    const logoutModalBtn    = document.getElementById('logoutModalBtn');
+    const pName             = document.getElementById('profileName');
+    const pEmail            = document.getElementById('profileEmail');
+    const pPartner          = document.getElementById('profilePartner');
+
+    // OPEN SETTINGS
+    settingsBtnHeader.onclick = () => {
+  pName.textContent    = me.name;
+  pEmail.textContent   = me.email;
+  pPartner.textContent = `Partner: ${me.partner}`;
+  settingsModal.classList.remove('hidden');
+};
+
+    // CLOSE SETTINGS
+    closeSettings.onclick = () => settingsModal.classList.add('hidden');
+    settingsModal.onclick = e => {
+      if (e.target === settingsModal) settingsModal.classList.add('hidden');
+    };
+    // LOGOUT FROM MODAL
+    logoutModalBtn.onclick = () => {
+      localStorage.removeItem('currentUser');
+      location.replace('taxflowsai-login.html');
+    };
+
+    // --- REST OF EXISTING ADMIN JS BELOW (unchanged) ---
+
+    // CLIENTS DATA
+    
+let clients = [];
+
+async function fetchClientsFromDynamo() {
+  const category = document.getElementById("filterCategory").value || "Individual";
+  const name = document.getElementById("filterClient").value.trim();
+
+  const url = new URL("https://uwxstszh9l.execute-api.us-east-1.amazonaws.com/default/ListDocuments");
+  url.searchParams.set("partner", me.partner);
+  url.searchParams.set("category", category);
+  if (name) url.searchParams.set("name", name);
+
+  const resp = await fetch(url.toString(), { method: "GET" });
+
+  if (!resp.ok) {
+    throw new Error('Failed to fetch client data');
+  }
+
+  return resp.json();
+}
+
+
+
+    // UI REFS
+    let currentCategory = 'Individual';
+
+const filterCategory = document.getElementById('filterCategory');
+const filterClient = document.getElementById('filterClient');
+
+function populateFilterDropdowns() {
+  
+  const categories = ["Individual", "Small Business", "Corporations"];
+
+  const names = [...new Set(clients.map(c => c.name))];
+
+
+filterCategory.innerHTML = '<option value="">All</option>';
+  
+
+  categories.forEach(c => {
+  filterCategory.innerHTML += `<option value="${c}">${c}</option>`;
+});
+filterClient.oninput = renderTable;
+
+}
+
+
+    document.getElementById('subtext').textContent = `You're viewing: ${currentCategory} Clients`;
+
+
+    const tableBody = document.getElementById('clientDetailsBody');
+    const crumbElem     = document.getElementById('crumb');
+    const crumbHeader   = document.getElementById('crumbHeader');
+    const docsContainer = document.getElementById('docsContainer');
+    const listCard      = document.getElementById('listCard');
+    const detailView    = document.getElementById('detailView');
+  
+
+    
+
+    // Render table
+function renderTable() {
+  const pf = me.partner;
+  const cf = filterCategory.value;
+  const nf = filterClient.value.toLowerCase();
+
+  const filtered = clients
+    .filter(c => c.partner === pf)
+    .filter(c => !cf || c.category === cf)
+    .filter(c => !nf || c.name.toLowerCase().includes(nf));
+
+  // ⬇️ Your stats use the filtered array safely now
+  document.getElementById('stat-clients').textContent = filtered.length;
+  document.getElementById('stat-docs').textContent = filtered.reduce((a,c)=>a+c.docs.length, 0);
+  document.getElementById('stat-review').textContent = filtered.reduce((a,c)=>a+c.docs.filter(d=>d.status==='inprogress').length, 0);
+  document.getElementById('stat-filed').textContent = filtered.reduce((a,c)=>a+c.docs.filter(d=>d.status==='complete').length, 0);
+
+  tableBody.innerHTML = '';
+
+  filtered.forEach((c, i) => {
+    const tags = `<span class="badge tag-pill">${c.docs.length} docs</span>`;
+
+    const all = c.docs.every(d => d.status === 'complete')
+      ? 'complete'
+      : c.docs.every(d => d.status === 'incomplete')
+        ? 'incomplete'
+        : 'inprogress';
+
+    const tr = document.createElement('tr');
+tr.dataset.idx = i;
+
+const numDocs = c.docs.length;
+const numReview = c.docs.filter(d => d.status === 'inprogress').length;
+const numFiled = c.docs.filter(d => d.status === 'complete').length;
+
+tr.innerHTML = `
+  <td><div class="client-cell"><img src="${c.avatar}" /><span>${c.name}</span></div></td>
+  <td>${c.partner}</td>
+  <td>${c.category}</td>
+  <td>${numDocs}</td>
+  <td>${numReview}</td>
+  <td>${numFiled}</td>
+`;
+
+    tableBody.appendChild(tr);
+  });
+}
+
+populateFilterDropdowns();
+reloadWithFilters();  // trigger fetch
+
+
+filterCategory.onchange = renderTable;
+filterClient.onchange = renderTable;
+
+
+
+    // Row click → detail
+    tableBody.addEventListener('click', e => {
+      const tr = e.target.closest('tr');
+      if (!tr) return;
+      openDetail(+tr.dataset.idx);
+    });
+
+    // Category nav
+    document.querySelectorAll('.nav-buttons button').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.nav-buttons button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCategory = btn.dataset.category;
+        crumbElem.textContent   = currentCategory.toLowerCase();
+        crumbHeader.textContent = currentCategory;
+        backBtn.click();
+        renderTable();
+      };
+    });
+    
+
+
+    // Detail view
+    function openDetail(idx) {
+      const c = clients[idx];
+      listCard.style.display   = 'none';
+      detailView.style.display = 'block';
+      document.getElementById('crumbCategory').textContent = currentCategory;
+      document.getElementById('crumbClient').textContent   = c.name;
+      document.getElementById('detailName').textContent    = c.name;
+      docsContainer.innerHTML = '';
+      c.docs.forEach((d,i) => {
+        const card = document.createElement('div');
+        card.className = 'detail-card';
+        card.innerHTML = `
+          <h3 class="card-title">${d.name.split('.')[0]}</h3>
+          <div class="doc-entry">
+            <i class="fas fa-file-alt doc-icon"></i>
+            <div class="doc-info">
+              <div class="doc-name">${d.name}</div>
+              <div class="doc-desc">${d.desc}</div>
+            </div>
+            <button class="btn-view" data-idx="${i}">View</button>
+          </div>
+          <div class="actions-container">
+            <button class="btn-approve" data-idx="${i}">Approve</button>
+            <button class="btn-deny"    data-idx="${i}">Deny</button>
+          </div>
+          <textarea class="comment-box" data-idx="${i}" placeholder="Add a comment...">${d.comment||''}</textarea>
+        `;
+        docsContainer.appendChild(card);
+      });
+      docsContainer.querySelectorAll('.btn-view').forEach(b=>b.onclick = ()=>window.open(c.docs[b.dataset.idx].url,'_blank'));
+      docsContainer.querySelectorAll('.btn-approve').forEach(b=>b.onclick = ()=>{ c.docs[b.dataset.idx].status='complete'; saveAndRefresh(idx); });
+      docsContainer.querySelectorAll('.btn-deny').forEach(b=>b.onclick    = ()=>{ c.docs[b.dataset.idx].status='incomplete'; saveAndRefresh(idx); });
+      docsContainer.querySelectorAll('.comment-box').forEach(txt=>txt.onchange = ()=>{ c.docs[txt.dataset.idx].comment = txt.value; saveClients(); });
+    }
+
+
+    function saveClients() {
+      localStorage.setItem('clients', JSON.stringify(clients));
+    }
+    function saveAndRefresh(idx) {
+      saveClients();
+      openDetail(idx);
+    }
+
+    // Initial render
+    
+
+    const feed = document.getElementById('activityFeed');
+async function loadActivityFeed() {
+  const partner = me.partner;
+  const url = new URL("https://uwxstszh9l.execute-api.us-east-1.amazonaws.com/default/GetRecentActivity");
+  url.searchParams.set("partner", partner);
+
+  try {
+    const resp = await fetch(url.toString());
+    const data = await resp.json();
+    const feed = document.getElementById("activityFeed");
+    feed.innerHTML = "";
+
+    (data.recent || []).slice(0, 5).forEach(evt => {
+  const li = document.createElement('li');
+  li.style.cssText = "display:flex; align-items:center; margin-bottom:.75rem;";
+  
+  li.innerHTML = `
+    <i class="fas fa-user-circle" style="font-size:1.75rem; margin-right:.75rem; color:var(--primary)"></i>
+    <div style="flex:1;">
+      <strong>${evt.user}</strong> ${evt.action}<br>
+      <span style="color:var(--muted); font-size:.9rem; cursor:pointer; text-decoration:underline;" class="doc-link" data-doc="${evt.doc}">
+        "${evt.doc}" • ${evt.ago || 'N/A'}
+      </span>
+    </div>
+  `;
+
+  li.querySelector(".doc-link").onclick = async () => {
+  const doc = encodeURIComponent(evt.doc);
+  const partner = encodeURIComponent(me.partner);
+  const user = encodeURIComponent(evt.user);
+  const category = encodeURIComponent("Individual");
+
+  const api = "https://uwxstszh9l.execute-api.us-east-1.amazonaws.com/default/GetPresignedDownloadUrl";
+  const url = `${api}?partner=${partner}&user=${user}&doc=${doc}&category=${category}`;
+
+  try {
+    const resp = await fetch(url);
+    const data = await resp.json();
+    if (data.url) {
+      window.open(data.url, "_blank");
+    } else {
+      alert("⚠️ Could not retrieve document link.");
+    }
+  } catch (err) {
+    console.error("❌ Error fetching presigned URL:", err);
+    alert("⚠️ Failed to open document.");
+  }
+};
+
+
+  feed.appendChild(li);
+});
+
+  } catch (err) {
+    console.error("❌ Failed to load activity feed", err);
+  }
+}
+
+li.querySelector(".doc-link").onclick = () => openPresignedDoc(evt);
+
+
+
+
+document.querySelectorAll('.nav-buttons button').forEach(btn => {
+  btn.onclick = () => {
+    
+    document.querySelectorAll('.nav-buttons button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Optional: Show/hide content based on label or data-route
+    const label = btn.textContent.trim();
+    console.log('Switching to view:', label);
+  };
+});
+const toggleBtn = document.getElementById('toggleActivity');
+const activityCard = document.getElementById('activityCard');
+
+
+
+
+
+toggleBtn.onclick = () => {
+  activityCard.classList.toggle('hidden');
+  toggleBtn.textContent = activityCard.classList.contains('hidden') ? '⬆' : '⬇';
+};
+filterCategory.onchange = renderTable;
+filterClient.oninput = renderTable;
+filterCategory.onchange = reloadWithFilters;
+filterClient.oninput = debounce(reloadWithFilters, 400); // optional: debounce to reduce API calls
+
+function reloadWithFilters() {
+  fetchClientsFromDynamo()
+    .then(result => {
+      clients = result;
+      localStorage.setItem('clients', JSON.stringify(clients));
+      renderTable();
+    })
+    .catch(err => {
+      console.error("Error loading filtered data:", err);
+      alert("Could not load filtered client list.");
+    });
+
+    console.log("🔄 Reloading client table with filters...");
+
+}
+
+// Optional: debounce helper
+function debounce(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+const refreshBtn = document.getElementById("refreshBtn");
+
+refreshBtn.onclick = async () => {
+  refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+  try {
+    const resp = await fetch("https://uwxstszh9l.execute-api.us-east-1.amazonaws.com/default/PatchBrokenMetadata", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({})
+    });
+
+    if (!resp.ok) throw new Error("Failed");
+    const data = await resp.json();
+    alert(`✅ Fixed ${data.patched.length || "some"} items.`);
+    await reloadWithFilters(); // Re-fetch client table
+  } catch (e) {
+    alert("❌ Refresh failed.");
+    console.error(e);
+  } finally {
+    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+  }
+};
+
+
+const allH3s = document.querySelectorAll('div.card h3');
+const clientTitle = Array.from(allH3s).find(h3 => h3.textContent.includes("Client Details") || h3.textContent.includes("Uploaded Docs") || h3.textContent.includes("Docs In Review") || h3.textContent.includes("Filed Docs"));
+
+clientTitle.textContent = "Uploaded Docs"; // or any label dynamically
+
+
+document.getElementById('stat-clients-card').onclick = () => {
+  filterCategory.value = "";
+  filterClient.value = "";
+  clientTitle.textContent = "Client Details";
+  renderTable();
+};
+
+document.getElementById('stat-docs').parentNode.onclick = () => {
+  const filtered = clients.filter(c => c.docs.length > 0);
+
+  // ✅ Sort by most recent doc timestamp (descending)
+  filtered.sort((a, b) => {
+    const aTime = Math.max(...a.docs.map(d => new Date(d.timestamp || d.createdAt || 0)));
+    const bTime = Math.max(...b.docs.map(d => new Date(d.timestamp || d.createdAt || 0)));
+    return bTime - aTime;
+  });
+
+  clientTitle.textContent = "Uploaded Docs";
+  renderFilteredClients(filtered);
+};
+
+
+document.getElementById('stat-review').parentNode.onclick = () => {
+  const filtered = clients.filter(c => c.docs.some(d => d.status === 'inprogress'));
+  clientTitle.textContent = "Docs In Review";
+  renderFilteredClients(filtered);
+};
+
+document.getElementById('stat-filed').parentNode.onclick = () => {
+  const filtered = clients.filter(c => c.docs.every(d => d.status === 'complete'));
+  clientTitle.textContent = "Filed Docs";
+  renderFilteredClients(filtered);
+};
+
+
+function renderFilteredClients(data) {
+  tableBody.innerHTML = '';
+  data.forEach((c, i) => {
+    const tags = `<span class="badge tag-pill">${c.docs.length} docs</span>`;
+    const all = c.docs.every(d => d.status === 'complete')
+      ? 'complete'
+      : c.docs.every(d => d.status === 'incomplete')
+        ? 'incomplete'
+        : 'inprogress';
+
+    const tr = document.createElement('tr');
+tr.dataset.idx = i;
+
+const numDocs = c.docs.length;
+const numReview = c.docs.filter(d => d.status === 'inprogress').length;
+const numFiled = c.docs.filter(d => d.status === 'complete').length;
+
+tr.innerHTML = `
+  <td><div class="client-cell"><img src="${c.avatar}" /><span>${c.name}</span></div></td>
+  <td>${c.partner}</td>
+  <td>${c.category}</td>
+  <td>${numDocs}</td>
+  <td>${numReview}</td>
+  <td>${numFiled}</td>
+`;
+
+    tableBody.appendChild(tr);
+  });
+}
+
+
+docsContainer.querySelectorAll('.btn-approve').forEach(b =>
+  b.onclick = () => {
+    c.docs[b.dataset.idx].status = 'complete';
+    saveAndRefresh(idx);
+  });
+
+docsContainer.querySelectorAll('.btn-deny').forEach(b =>
+  b.onclick = () => {
+    c.docs[b.dataset.idx].status = 'inprogress';
+    saveAndRefresh(idx);
+  });
+
+
+docsContainer.querySelectorAll('.btn-approve').forEach(b =>
+  b.onclick = () => {
+    c.docs[b.dataset.idx].status = 'complete';
+    
+    const card = b.closest('.detail-card');
+    card.querySelector('.btn-deny')?.remove();
+    card.querySelector('.comment-box')?.remove();
+    b.textContent = "✔ Approved";
+    b.disabled = true;
+
+    saveAndRefresh(idx);
+  });
+
+  async function openPresignedDoc(evt) {
+  const doc = encodeURIComponent(evt.doc);
+  const partner = encodeURIComponent(me.partner);
+  const user = encodeURIComponent(evt.user);
+  const category = encodeURIComponent("Individual"); // or derive from evt if needed
+
+  const api = "https://uwxstszh9l.execute-api.us-east-1.amazonaws.com/default/GetPresignedDownloadUrl";
+  const url = `${api}?partner=${partner}&user=${user}&doc=${doc}&category=${category}`;
+
+  try {
+    const resp = await fetch(url);
+    const data = await resp.json();
+    if (data.url) {
+      window.open(data.url, "_blank");
+    } else {
+      alert("⚠️ Could not retrieve document link.");
+    }
+  } catch (err) {
+    console.error("❌ Error fetching presigned URL:", err);
+    alert("⚠️ Failed to open document.");
+  }
+}
+
+
+populateFilterDropdowns();
+reloadWithFilters(); // DO NOT call renderTable() directly
+loadActivityFeed();
+
+
+  </script>
+</body>
+</html>
