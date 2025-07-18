@@ -13,11 +13,29 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout Code explicitly
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Explicitly Deploy HTML Files to GitHub Pages
+      # If you introduce a package.json in frontend and define a build script,
+      # these steps will install dependencies and build the site.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: |
+          npm install
+
+      - name: Build static site
+        working-directory: ./frontend
+        run: |
+          npm run build
+
+      # Publish the build folder (adjust if your build script outputs to another folder)
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./frontend
+          publish_dir: ./frontend/build
