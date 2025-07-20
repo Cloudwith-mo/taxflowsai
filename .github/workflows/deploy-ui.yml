@@ -32,16 +32,10 @@ jobs:
         working-directory: frontend
         run: npm run build
 
-      - name: Prepare static output
-        # copy your html files (and CNAME) into the build folder
-        run: |
-          cp CNAME           frontend/build/
-          cp *.html          frontend/build/
-        # if your HTML lives under frontend/, you might `cp frontend/*.html frontend/build/`
-
+  
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-         github_token: ${{ secrets.GITHUB_TOKEN }}
-         publish_dir: ./frontend
-         publish_branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./frontend
+          publish_branch: gh-pages
