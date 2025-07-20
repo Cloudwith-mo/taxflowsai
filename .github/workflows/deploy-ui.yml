@@ -42,8 +42,6 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: frontend/build
-          # if you want custom domain support, you can also add:
-          # cname: taxflowsai.com
+         github_token: ${{ secrets.GITHUB_TOKEN }}
+         publish_dir: ./frontend
+         publish_branch: gh-pages
