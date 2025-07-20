@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TaxFlowsAI Dashboard</title>
+  <!-- Font Awesome -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        crossorigin="anonymous"/>
+  <style>
+    :root {
+      --bg: #0d1a2e;
+      --card-bg: #1e2a44;
+      --primary: #2979ff;
+      --text: #e5e7eb;
+      --muted: #8f98a5;
+      --shadow: rgba(0,0,0,0.4);
+    }
+    * { box-sizing:border-box; margin:0; padding:0 }
+    body { background:var(--bg); color:var(--text); font-family:"Segoe UI",sans-serif }
+    .hidden { display: none; }
+    .container { max-width:1200px; margin:auto; padding:2rem 1rem }
+
+    /* HEADER */
+    .header { display:flex; justify-content:space-between; align-items:center }
+    .header-left { display:flex; align-items:center; gap:.5rem }
+    .header-left i { font-size:2rem; color:var(--primary) }
+    .header-left h1 { font-size:1.5rem; font-weight:500 }
+    .header-left h1 span { color:var(--primary) }
+    .header-right button {
+      background:none; border:none; color:var(--muted);
+      font-size:1.5rem; cursor:pointer;
+    }
+    .header-right button:hover { color:var(--text) }
+    .divider { margin:1rem 0 2rem; height:1px; border:none; background:rgba(255,255,255,0.1) }
+
+    /* TOP */
+    .top {
+      display:flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:1rem;
+    }
+    .greeting { font-size:1.75rem; font-weight:500 }
+    .subtext { font-size:.9rem; color:var(--muted); margin-top:.25rem }
+    .progress-tabs {
+      display:flex; align-items:center; gap:1.5rem;
+      position:relative; flex:1; max-width:400px;
+    }
+    .progress-tabs span {
+      cursor:pointer; color:var(--muted);
+      padding-bottom:.25rem; font-size:.9rem;
+    }
+    .progress-tabs span.active {
+      color:var(--text); font-weight:500;
+    }
+    .progress-bar {
+      position:absolute; bottom:0;
+      height:3px; background:var(--primary);
+      transition:left .3s, width .3s;
+    }
+    .btn-open-upload {
+      background:var(--primary); color:#fff; border:none;
+      padding:.75rem 1.25rem; border-radius:8px;
+      cursor:pointer; font-size:.9rem;
+    }
+    .btn-open-upload:hover { opacity:.9 }
+
+    /* GRID & CARDS */
+    .grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+      gap:1.5rem; margin-top:2rem;
+    }
+    .card {
+      background:var(--card-bg); border-radius:12px;
+      padding:1.25rem; box-shadow:0 4px 12px var(--shadow);
+    }
+    .card h3 { font-size:1.1rem; margin-bottom:1rem }
+
+    .card ul.doc-list {
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+
+    /* DOC LIST */
+    .doc-list { list-style:none; padding:0; margin:0 }
+    .doc-list li {
+      display:flex; align-items:center; gap:.75rem; padding:.5rem;
+      border-radius:6px; cursor:pointer; transition:background .2s;
+    }
+    .doc-list li:hover { background:rgba(255,255,255,0.05) }
+    .doc-list li i {
+      font-size:1.5rem; color:var(--primary); min-width:1.5rem;
+    }
+    .tag-list { margin-top:.5rem; display:flex; flex-wrap:wrap; gap:.5rem }
+    .tag {
+      background:var(--primary); color:#fff;
+      padding:.25rem .5rem; border-radius:4px; font-size:.75rem;
+    }
+
+    /* NOTIFICATIONS */
+    .no-notifs {
+      text-align:center; color:var(--muted);
+      padding:1.5rem 0; font-size:.9rem;
+    }
+
+    /* AI CHAT */
+    .chat-icon { text-align:center; margin-bottom:.75rem }
+    .chat-icon i { font-size:2.5rem; color:var(--primary) }
+    .chat-quick { list-style:none; padding:0; margin:0 0 1rem }
+    .chat-quick li a {
+      display:block; background:#0f243f; padding:.75rem 1rem;
+      border-radius:8px; color:var(--text); text-decoration:none;
+      font-size:.9rem; margin-bottom:.75rem; transition:background .2s;
+    }
+    .chat-quick li a:hover { background:#0d1f38 }
+    .chat-input { display:flex; flex-direction:column; gap:.5rem }
+    .chat-input input {
+      padding:.75rem 1rem; border:none; border-radius:8px;
+      background:#0f243f; color:var(--text);
+    }
+    .chat-input button {
+      background:var(--primary); border:none; border-radius:8px;
+      padding:.75rem; color:#fff; cursor:pointer;
+      transition:background .2s;
+    }
+    .chat-input button:hover { background:#1a73e8 }
+
+    /* MODALS */
+    .modal-overlay {
+      position:fixed; top:0; left:0;
+      width:100vw; height:100vh;
+      background:rgba(0,0,0,0.6);
+      display:flex; align-items:center; justify-content:center;
+      z-index:1000;
+    }
+    .modal-overlay.hidden { display:none }
+    .modal {
+      background:var(--card-bg); border-radius:12px;
+      padding:1.5rem; position:relative;
+      box-shadow:0 8px 24px var(--shadow);
+      max-height:90vh; overflow:auto;
+    }
+    .modal-header {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:1rem;
+    }
+    .modal-close {
+      background:none; border:none; font-size:1.25rem;
+      color:var(--text); cursor:pointer;
+    }
+
+    /* Upload Modal */
+    .upload-modal { width:400px; max-width:90% }
+    .drop-zone { border:2px dashed var(--muted); border-radius:8px;
+                 padding:2rem; text-align:center; color:var(--muted);
+                 cursor:pointer; transition:background .2s,border-color .2s; }
+    .drop-zone.dragover {
+      border-color:var(--primary); background:rgba(41,121,255,0.05);
+    }
+    .modal-file-list { list-style:none; margin-top:1rem;
+                       padding:0; max-height:8rem; overflow-y:auto }
+    .modal-file-list li {
+      background:var(--card-bg); padding:.75rem 1rem;
+      border-radius:6px; margin-bottom:.5rem; font-size:.9rem;
+      position:relative;
+    }
+    .modal-file-list li .size {
+      position:absolute; top:.75rem; right:1rem;
+      color:var(--muted); font-size:.85rem;
+    }
+    .modal-actions { display:flex; justify-content:flex-end;
+                     gap:1rem; margin-top:1.5rem }
+    .btn-modal-cancel {
+      background:none; border:none; color:var(--text);
+      font-size:.95rem; cursor:pointer;
+    }
+    .btn-modal-upload {
+      background:var(--primary); border:none; color:#fff;
+      padding:.5rem 1rem; border-radius:4px;
+      font-size:.95rem; cursor:pointer;
+    }
+    .btn-modal-upload:disabled { opacity:.5; cursor:not-allowed }
+
+    /* SETTINGS MODAL */
+    .settings-modal { width:360px; max-width:90% }
+    .settings-profile { margin-bottom:1rem }
+    .settings-profile strong { font-size:1.1rem }
+    .settings-profile .email,
+    .settings-profile .phone,
+    .settings-profile .category {
+      display:block; color:var(--muted); font-size:.9rem; margin-bottom:.5rem;
+    }
+    .settings-divider {
+      border:none; height:1px; background:rgba(255,255,255,0.1);
+      margin:1rem 0;
+    }
+    .settings-stats div { margin-bottom:.75rem; font-size:.95rem }
+
+    .settings-form .input-group { margin-bottom:1rem }
+    .settings-form .input-group label {
+      display:block; margin-bottom:.25rem; color:var(--text);
+      font-size:.9rem;
+    }
+    .settings-form .input-group input,
+    .settings-form .input-group select {
+      width:100%; padding:.5rem; border:none; border-radius:6px;
+      background:var(--card-bg); color:var(--text); font-size:1rem;
+    }
+
+    .btn-primary {
+      background:var(--primary); color:#fff; border:none;
+      padding:.5rem 1rem; border-radius:6px; cursor:pointer;
+      font-size:.9rem; font-weight:500; transition:background .2s;
+    }
+    .btn-primary:hover { background:#1d5fd9 }
+    .btn-secondary {
+      background:none; color:var(--primary); border:1px solid var(--primary);
+      padding:.5rem 1rem; border-radius:6px; cursor:pointer;
+      font-size:.9rem; font-weight:500; transition:background .2s;
+    }
+    .btn-secondary:hover { background:rgba(41,121,255,0.1) }
+
+    /* DOC VIEWER */
+    .doc-viewer .modal { width:80%; max-width:800px; overflow:hidden; padding:0 }
+    .doc-viewer iframe { width:100%; height:80vh; border:none }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-left">
+        <i class="fas fa-cloud"></i>
+        <h1>TaxFlows<span>AI</span></h1>
+      </div>
+      <div class="header-right">
+        <button id="settingsBtn"><i class="fas fa-cog"></i></button>
+      </div>
+    </div>
+    <hr class="divider"/>
+
+    <!-- TOP SECTION -->
+    <div class="top">
+      <div>
+        <div class="greeting">Welcome, …</div>
+        <div class="subtext">You’re part of the … network</div>
+      </div>
+      <div class="progress-tabs">
+        <span data-status="uploaded" class="active">Uploaded</span>
+        <span data-status="review">In Review</span>
+        <span data-status="filed">Filed</span>
+        <div class="progress-bar"></div>
+      </div>
+      <button id="openUploadBtn" class="btn-open-upload">Upload Document</button>
+    </div>
+
+    <!-- DASHBOARD GRID -->
+    <div id="clientView">
+      <div class="grid">
+        <div class="card">
+          <!-- dynamic heading -->
+          <h3 id="docsTitle">Documents Uploaded</h3>
+          <ul class="doc-list"></ul>
+        </div>
+        <div class="card">
+          <h3>Notifications</h3>
+          <div class="no-notifs">No new notifications</div>
+        </div>
+        <div class="card">
+          <div class="chat-icon"><i class="fas fa-comments"></i></div>
+          <h3 style="text-align:center; margin-bottom:1rem;">AI Chat</h3>
+          <ul class="chat-quick">
+            <li><a href="#">What’s the status of my refund?</a></li>
+            <li><a href="#">How do I upload a 1099?</a></li>
+          </ul>
+          <div class="chat-input">
+            <input type="text" placeholder="Ask anything…"/>
+            <button>Chat</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD MODAL -->
+  <div id="uploadModal" class="modal-overlay hidden">
+    <div class="modal upload-modal">
+      <div class="modal-header">
+        <h2>Upload Document</h2>
+        <button id="closeUploadModal" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="uploadDropZone" class="drop-zone">
+  <p>Drag &amp; drop files here, or click to choose</p>
+  <input type="file" id="fileInput" multiple />
+
+</div>
+
+        <ul id="modalFileList" class="modal-file-list"></ul>
+      </div>
+      <div class="modal-actions">
+        <button id="cancelUploadBtn" class="btn-modal-cancel">Cancel</button>
+        <button id="confirmUploadBtn" class="btn-modal-upload" disabled>Upload</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- SETTINGS MODAL -->
+  <div id="settingsModal" class="modal-overlay hidden">
+    <div class="modal settings-modal">
+      <div class="modal-header">
+        <h2>Settings</h2>
+        <button id="closeSettingsModal" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- VIEW MODE -->
+        <div class="settings-profile" id="profileView">
+          <strong id="profileName">…</strong>
+          <span class="email"   id="profileEmail">…</span>
+          <span class="phone"   id="profilePhone">…</span>
+          <span class="category"id="profileCategory">…</span>
+          <span class="partner" id="profilePartner">…</span>
+          <button id="editProfileBtn" class="btn-secondary">Edit</button>
+        </div>
+        <hr class="settings-divider"/>
+
+        <!-- EDIT MODE -->
+        <div class="settings-form hidden" id="profileEdit">
+          <div class="input-group">
+            <label for="editName">Name</label>
+            <input type="text" id="editName"/>
+          </div>
+          <div class="input-group">
+            <label for="editEmail">Email</label>
+            <input type="email" id="editEmail"/>
+          </div>
+          <div class="input-group">
+            <label for="editPhone">Phone</label>
+            <input type="text" id="editPhone"/>
+          </div>
+          <div class="input-group">
+            <label for="editCategory">Category</label>
+            <select id="editCategory">
+              <option>Individual</option>
+              <option>Small Business</option>
+              <option>Corporation</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="editPartner">Partner / Network</label>
+            <input type="text" id="editPartner"/>
+          </div>
+          <button id="saveProfileBtn"   class="btn-primary">Save</button>
+          <button id="cancelEditBtn"    class="btn-secondary">Cancel</button>
+        </div>
+
+        <div class="settings-stats" style="margin-top:1.5rem;">
+          <div>Uploaded: <span id="stat-uploaded">0</span></div>
+          <div>In Review: <span id="stat-review">0</span></div>
+          <div>Filed: <span id="stat-filed">0</span></div>
+        </div>
+        <div style="margin-top:1rem;">
+          <button id="logoutBtn" class="btn-secondary">Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOC VIEWER MODAL -->
+  <div id="viewModal" class="modal-overlay hidden doc-viewer">
+    <div class="modal">
+      <iframe id="docIframe" src=""></iframe>
+    </div>
+  </div>
+
+  <script>
+// ✅ now points at the correct stage
+const API_BASE = 'https://dql2om6jc.execute-api.us-east-1.amazonaws.com/default';
+
+
+    // AUTH GUARD & PROFILE
+const raw = localStorage.getItem('currentUser');
+if (!raw) {
+  location.replace('taxflowsai-login.html');
+}
+const me = JSON.parse(raw);
+
+// Cognito stores your “partner” and “role” in custom:… attributes:
+me.phone   = me.phone || '';
+me.partner = me['custom:partner'] || '';
+
+// **Use the single category you saved at login** (fallback to the first in the list or “Individual”):
+const picked = localStorage.getItem('currentCategory');
+me.category = picked || me['custom:category']?.split(',')[0] || 'Individual';
+
+
+
+    // ELEMENTS
+    const greeting     = document.querySelector('.greeting');
+    const subtext      = document.querySelector('.subtext');
+    const settingsBtn  = document.getElementById('settingsBtn');
+    const settingsMd   = document.getElementById('settingsModal');
+    const closeSet     = document.getElementById('closeSettingsModal');
+    const logoutBtn    = document.getElementById('logoutBtn');
+    const profileView  = document.getElementById('profileView');
+    const profileEdit  = document.getElementById('profileEdit');
+    const editBtn      = document.getElementById('editProfileBtn');
+    const saveBtn      = document.getElementById('saveProfileBtn');
+    const cancelBtn    = document.getElementById('cancelEditBtn');
+    const pName        = document.getElementById('profileName');
+    const pEmail       = document.getElementById('profileEmail');
+    const pPhone       = document.getElementById('profilePhone');
+    const pCategory    = document.getElementById('profileCategory');
+    const pPartner     = document.getElementById('profilePartner');
+    const eName        = document.getElementById('editName');
+    const eEmail       = document.getElementById('editEmail');
+    const ePhone       = document.getElementById('editPhone');
+    const eCategory    = document.getElementById('editCategory');
+    const ePartner     = document.getElementById('editPartner');
+
+    // RENDER HEADER & SETTINGS
+  function renderHeader() {
+  greeting.textContent = `Welcome, ${me.name}`;
+  let categories = typeof me.category === 'string' ? me.category.split(',') : [];
+  let displayCat = categories[0] || 'Individual';
+  subtext.textContent = `You’re a ${displayCat}, part of the ${me.partner} network.`;
+}
+    
+    function renderSettingsView() {
+      pName.textContent     = me.name;
+      pEmail.textContent    = `Email: ${me.email}`;
+      pPhone.textContent    = `Phone: ${me.phone || '–'}`;
+      pCategory.textContent = `Category: ${me.category}`;
+      pPartner.textContent  = `Partner: ${me.partner}`;
+    }
+    function openSettings() {
+      renderSettingsView();
+      profileEdit.classList.add('hidden');
+      profileView.classList.remove('hidden');
+      settingsMd.classList.remove('hidden');
+      updateStats();
+      renderDocs();
+    }
+    function closeSettings() {
+      settingsMd.classList.add('hidden');
+    }
+
+    settingsBtn.onclick = openSettings;
+    closeSet.onclick   = closeSettings;
+    settingsMd.onclick = e => { if (e.target === settingsMd) closeSettings(); };
+
+    editBtn.onclick   = () => {
+      eName.value     = me.name;
+      eEmail.value    = me.email;
+      ePhone.value    = me.phone;
+      eCategory.value = me.category;
+      ePartner.value  = me.partner;
+      profileView.classList.add('hidden');
+      profileEdit.classList.remove('hidden');
+    };
+    cancelBtn.onclick = () => {
+      profileEdit.classList.add('hidden');
+      profileView.classList.remove('hidden');
+    };
+    
+    logoutBtn.onclick = () => {
+      localStorage.removeItem('currentUser');
+      location.replace('taxflowsai-login.html');
+    };
+
+    // DOCUMENT STATE
+    const docsData = { uploaded: [], review: [], filed: [] };
+    const tabs     = document.querySelectorAll('.progress-tabs span');
+    const bar      = document.querySelector('.progress-bar');
+    const docsTitle= document.getElementById('docsTitle');
+    const docList  = document.querySelector('.doc-list');
+    let currentStatus = 'uploaded';
+
+    function fmtSize(b) {
+      if (b < 1024) return b + ' B';
+      if (b < 1024**2) return (b/1024).toFixed(1) + ' KB';
+      return (b/1024**2).toFixed(1) + ' MB';
+    }
+    function renderDocs() {
+      const titles = {
+        uploaded: 'Documents Uploaded',
+        review:   'Documents In Review',
+        filed:    'Documents Filed'
+      };
+      docsTitle.textContent = titles[currentStatus];
+      docList.innerHTML = '';
+      docsData[currentStatus].forEach(d => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <i class="fas fa-file-alt"></i>
+          <div style="flex:1">
+            <strong>${d.filename || 'Unnamed'}</strong><br>
+            <small style="color:var(--muted)">${new Date(d.timestamp).toLocaleString()}</small>
+            ${d.tags?.length?`
+              <div class="tag-list">
+                ${d.tags.map(t=>`<span class="tag">${t}</span>`).join('')}
+              </div>`:''}
+          </div>`;
+          li.onclick = () => openViewer(d.downloadUrl);
+
+        docList.appendChild(li);
+      });
+    }
+    function updateStats() {
+      document.getElementById('stat-uploaded').textContent = docsData.uploaded.length;
+      document.getElementById('stat-review').textContent   = docsData.review.length;
+      document.getElementById('stat-filed').textContent    = docsData.filed.length;
+    }
+
+    tabs.forEach(tab => {
+      tab.onclick = () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentStatus = tab.dataset.status;
+        const { offsetWidth:w, offsetLeft:x } = tab;
+        bar.style.width = w + 'px';
+        bar.style.left  = x + 'px';
+        renderDocs();
+      };
+    });
+    // init
+   (async () => {
+      const activeTab = document.querySelector('.progress-tabs span.active');
+      const { offsetWidth:w, offsetLeft:x } = activeTab;
+      bar.style.width = w + 'px';
+      bar.style.left  = x + 'px';
+      renderHeader();
+
+
+fetchDocs(me.category)
+  .then(list => {
+
+    // Sort all docs descending by timestamp
+list.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    docsData.uploaded = list.filter(d => d.status === 'uploaded');
+    docsData.review   = list.filter(d => d.status === 'review');
+    docsData.filed    = list.filter(d => d.status === 'filed');
+    updateStats();
+    renderDocs();
+  })
+.catch(err => {
+    console.error('could not load docs', err);
+    // You might want to handle the error gracefully here,
+    // perhaps by setting the data to an empty array or displaying an error message.
+    // For example:
+    // this.docs = [];
+  });
+
+
+    })();
+
+    // UPLOAD MODAL
+    
+    const openUpBtn = document.getElementById('openUploadBtn');
+    const uploadMd  = document.getElementById('uploadModal');
+    const closeUp   = document.getElementById('closeUploadModal');
+    const cancelUp  = document.getElementById('cancelUploadBtn');
+    const confirmUp = document.getElementById('confirmUploadBtn');
+    const dropZone  = document.getElementById('uploadDropZone');
+    const fileIn    = document.getElementById('fileInput');
+    const modalList = document.getElementById('modalFileList');
+    let selectedFiles = [];
+
+    function renderModalList() {
+  modalList.innerHTML = '';
+  selectedFiles.forEach((file, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <!-- allow the user to override the filename -->
+      <input
+        type="text"
+        class="filename-input"
+        data-index="${i}"
+        value="${file.name}"
+        placeholder="Enter display name"
+        style="width:100%;margin-bottom:.5rem;padding:.5rem;border-radius:4px;
+               border:1px solid #555;background:#1e2a44;color:#e5e7eb;"
+      />
+
+      <!-- show the actual file name & size -->
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span>${file.name}</span>
+        <span class="size">${fmtSize(file.size)}</span>
+      </div>
+
+      <!-- tags -->
+      <input
+        class="tag-input"
+        data-index="${i}"
+        placeholder="Tags (comma separated)"
+        style="width:100%;margin-top:.5rem;padding:.5rem;border-radius:4px;
+               border:1px solid #555;background:#1e2a44;color:#e5e7eb;"
+      />
+    `;
+    modalList.appendChild(li);
+  });
+}
+
+    openUpBtn.onclick = () => uploadMd.classList.remove('hidden');
+    closeUp.onclick   = () => { uploadMd.classList.add('hidden'); resetUpload(); };
+    cancelUp.onclick  = () => { uploadMd.classList.add('hidden'); resetUpload(); };
+
+    ['dragenter','dragover'].forEach(ev => {
+      dropZone.addEventListener(ev, e => {
+        e.preventDefault(); dropZone.classList.add('dragover');
+      });
+    });
+    ['dragleave','drop'].forEach(ev => {
+      dropZone.addEventListener(ev, e => {
+        e.preventDefault(); dropZone.classList.remove('dragover');
+      });
+    });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      selectedFiles = Array.from(e.dataTransfer.files);
+      fileIn.files   = e.dataTransfer.files;
+      renderModalList();
+      confirmUp.disabled = !selectedFiles.length;
+    });
+    dropZone.onclick = () => fileIn.click();
+    fileIn.onchange  = () => {
+      selectedFiles = Array.from(fileIn.files);
+      renderModalList();
+      confirmUp.disabled = !selectedFiles.length;
+    };
+
+
+    function resetUpload() {
+      selectedFiles = [];
+      fileIn.value   = '';
+      modalList.innerHTML = '';
+      confirmUp.disabled   = true;
+    }
+
+    // DOC VIEWER
+    const viewMd   = document.getElementById('viewModal');
+    const docIframe= document.getElementById('docIframe');
+    function openViewer(src) {
+  const isPDF = src.toLowerCase().endsWith('.pdf');
+  if (!isPDF) {
+    window.open(src, '_blank'); // open in new tab
+    return;
+  }
+  docIframe.src = src;
+  viewMd.classList.remove('hidden');
+}
+
+// 1) fetch a presigned URL (passing filename, account, user, partner, category, username)
+async function fetchUploadUrl(filename, account, contentType, tags = []) {
+
+  const payload = {
+  filename,
+  account,
+  user: me.email, // Ensure this is set correctly from the frontend
+  contentType,
+  partner: me.partner,
+  category: me.category,
+  username: me.name,
+  tags
+};
+
+
+
+  const resp = await fetch(
+    `${API_BASE}/GetUploadUrl`,
+    {
+      method: 'POST',
+      headers: {
+  'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error(`Could not get upload URL: ${await resp.text()}`);
+  }
+
+  return resp.json();  // { uploadUrl, downloadUrl, docId, … }
+}
+
+// 2) wire up the upload button once
+confirmUp.onclick = async () => {
+  const account = me.category;
+
+  try {
+    await Promise.all(selectedFiles.map(async (file, i) => {
+      const li = modalList.children[i];
+      const displayName = li.querySelector('.filename-input')?.value?.trim() || file.name;
+      const tagStr = li.querySelector('.tag-input')?.value?.trim() || '';
+      const tags = tagStr.split(',').map(t => t.trim()).filter(Boolean);
+
+      const { uploadUrl } = await fetchUploadUrl(displayName, account, file.type, tags);
+
+      await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file
+      });
+    }));
+
+    const allDocs = await fetchDocs(me.category);
+    if (Array.isArray(allDocs)) {
+      docsData.uploaded = allDocs.filter(d => d.status === 'uploaded');
+      docsData.review = allDocs.filter(d => d.status === 'review');
+      docsData.filed = allDocs.filter(d => d.status === 'filed');
+      updateStats();
+      renderDocs();
+    }
+
+    // ✅ Hide modal and reset state
+    resetUpload();
+    uploadMd.classList.add('hidden');
+
+    // ✅ Show toast
+    const toast = document.createElement('div');
+    toast.textContent = '✅ Documents uploaded successfully!';
+    toast.style.cssText = `
+      position:fixed; bottom:2rem; right:2rem;
+      background:var(--card-bg); color:var(--text);
+      padding:.75rem 1.25rem; border-radius:8px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:.9rem; z-index:2000;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+
+  } catch (e) {
+    console.error('Upload error:', e);
+    alert("Upload failed: " + e.message);
+  }
+};
+
+
+// 3) fetch the list of existing docs from your HTTP API
+// ✅ use exactly the "Invoke URL" from your Stage
+async function fetchDocs(category) {
+  const qs = new URLSearchParams({
+    user:    me.email,
+    partner: me.partner,
+    category
+  });
+
+  const url = `${API_BASE}/ListDocuments?${qs.toString()}`;
+  console.log('Fetching docs from', url);
+  const resp = await fetch(`${API_BASE}/ListDocuments?${qs.toString()}`, { method: 'GET' });
+  if (!resp.ok) throw new Error(await resp.text());
+
+  const payload = await resp.json();
+  // unwrap if your Lambda proxy returns { body: "…json…" }
+    // unwrap proxy
+  let docs = payload.body && typeof payload.body === 'string'
+    ? JSON.parse(payload.body)
+    : payload;
+
+  // **always** return an array
+  return Array.isArray(docs) ? docs : [ docs ];
+
+}
+
+document.querySelector('.chat-input button').onclick = () => {
+  const msg = document.querySelector('.chat-input input').value.trim();
+  if (!msg) return;
+  alert(`(Simulated AI Response)\n\nLily says: “${msg}”`);
+};
+
+saveBtn.onclick   = () => {
+      me.name     = eName.value.trim();
+      me.phone    = ePhone.value.trim();
+      me.category = eCategory.value;
+      me.partner  = ePartner.value.trim();
+
+      localStorage.setItem('user_' + me.email, JSON.stringify(me));
+  renderHeader();
+  renderSettingsView();
+  profileEdit.classList.add('hidden');
+  profileView.classList.remove('hidden');
+    };
+
+
+</script>
+</body>
+</html>
