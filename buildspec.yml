@@ -1,0 +1,16 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - cd frontend
+      - npm ci
+  build:
+    commands:
+      - cd frontend
+      - npm run build
+  post_build:
+    commands:
+      # Sync the build output to S3
+      - aws s3 sync ./frontend/build s3://taxflowsai-frontend-site --delete
