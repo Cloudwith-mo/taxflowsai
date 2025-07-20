@@ -380,7 +380,7 @@
 
   <script>
 // ✅ now points at the correct stage
-const API_BASE = 'https://q613ysn8o3.execute-api.us-east-1.amazonaws.com';
+const API_BASE = 'https://dql2om6jc.execute-api.us-east-1.amazonaws.com/default';
 
 
     // AUTH GUARD & PROFILE
@@ -662,13 +662,14 @@ async function fetchUploadUrl(filename, account, contentType, tags = []) {
   const payload = {
   filename,
   account,
-  user: me.email,
+  user: me.email, // Ensure this is set correctly from the frontend
   contentType,
   partner: me.partner,
   category: me.category,
   username: me.name,
   tags
 };
+
 
 
   const resp = await fetch(
