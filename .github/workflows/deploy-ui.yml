@@ -2,39 +2,33 @@ name: Deploy Static UI to GitHub Pages
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
     paths:
       - "frontend/**"
+      - ".github/workflows/deploy-ui.yml"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # If you introduce a package.json in frontend and define a build script,
-      # these steps will install dependencies and build the site.
-      - name: Set up Node.js
+      - name: Use Node.js 18
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Install & build
         working-directory: ./frontend
         run: |
-          npm install
-
-      - name: Build static site
-        working-directory: ./frontend
-        run: |
+          npm ci
           npm run build
 
-      # Publish the build folder (adjust if your build script outputs to another folder)
-      - name: Deploy to GitHub Pages
+      - name: Publish to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
