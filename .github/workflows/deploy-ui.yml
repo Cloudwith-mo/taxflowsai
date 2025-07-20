@@ -2,35 +2,48 @@ name: Deploy Static UI to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
     paths:
-      - "frontend/**"
-      - ".github/workflows/deploy-ui.yml"
+      - 'frontend/**'
+      - '.github/workflows/deploy-ui.yml'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-
+      contents: write   # allow pushing to gh-pages
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0    # we need full history for Actions-GH-Pages
 
-      - name: Use Node.js 18
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: Install & build
-        working-directory: ./frontend
-        run: |
-          npm ci
-          npm run build
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
 
-      - name: Publish to GitHub Pages
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Prepare static output
+        # copy your html files (and CNAME) into the build folder
+        run: |
+          cp CNAME           frontend/build/
+          cp *.html          frontend/build/
+        # if your HTML lives under frontend/, you might `cp frontend/*.html frontend/build/`
+
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: ./frontend/build
+          publish_dir: frontend/build
+          # if you want custom domain support, you can also add:
+          # cname: taxflowsai.com
