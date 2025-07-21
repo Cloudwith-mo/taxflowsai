@@ -99,8 +99,8 @@ resource "aws_apigatewayv2_api" "taxflows_api" {
     allow_headers  = ["Content-Type", "Authorization"]
     expose_headers = ["*"]
     max_age        = 3600
-    
-    allow_credentials = true  # <-- Important for Authenticated Requests
+
+    allow_credentials = true # <-- Important for Authenticated Requests
   }
 }
 
