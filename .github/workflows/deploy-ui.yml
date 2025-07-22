@@ -33,10 +33,19 @@ jobs:
         working-directory: frontend
         run: npm run build
 
-      - name: Copy dashboard HTML → index.html
+
+      - name: Copy client dashboard → index.html
         working-directory: frontend
-        run: |
-          cp taxflowsai-client-dashboard.html build/index.html
+        run: cp taxflowsai-client-dashboard.html build/index.html
+
+      - name: Copy login page
+        working-directory: frontend
+        run: cp ../taxflowsai-login.html build/login.html
+
+      - name: Copy admin page
+        working-directory: frontend
+        run: cp ../taxflowsai-admin-dashboard.html build/admin-dashboard.html
+
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
