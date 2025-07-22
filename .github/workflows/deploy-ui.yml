@@ -40,7 +40,7 @@ jobs:
 
       - name: Copy login page
         working-directory: frontend
-        run: cp axflowsai-login.html build/login.html
+        run: cp taxflowsai-login.html build/login.html
 
       - name: Copy admin page
         working-directory: frontend
