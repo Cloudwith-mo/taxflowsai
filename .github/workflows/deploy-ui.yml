@@ -40,11 +40,11 @@ jobs:
 
       - name: Copy login page
         working-directory: frontend
-        run: ctaxflowsai-login.html build/login.html
+        run: cp axflowsai-login.html build/login.html
 
       - name: Copy admin page
         working-directory: frontend
-        run: taxflowsai-admin-dashboard.html build/admin-dashboard.html
+        run: cp taxflowsai-admin-dashboard.html build/admin-dashboard.html
 
 
       - name: Deploy to GitHub Pages
