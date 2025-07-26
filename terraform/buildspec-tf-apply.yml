@@ -1,3 +1,4 @@
+# buildspec-tf-apply.yml
 version: 0.2
 phases:
   install:
@@ -8,10 +9,4 @@ phases:
   build:
     commands:
       - cd terraform
-      - terraform init -input=false
-      - terraform fmt -recursive
-      - terraform validate
-      - terraform plan -out plan.tfplan
-artifacts:
-  files:
-    - terraform/plan.tfplan
+      - terraform apply -auto-approve plan.tfplan
