@@ -53,9 +53,9 @@ locals {
   artifact_policy = {
     Version = "2012-10-17"
     Statement = [{
-      Sid      = "AllowPipelineArtifacts"
-      Effect   = "Allow"
-      Action   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
+      Sid    = "AllowPipelineArtifacts"
+      Effect = "Allow"
+      Action = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
       Resource = [
         "arn:aws:s3:::${var.artifact_bucket}",
         "arn:aws:s3:::${var.artifact_bucket}/*",
