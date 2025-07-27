@@ -1,5 +1,5 @@
 resource "aws_iam_role" "lambda_exec" {
-  name = "TaxFlowsAI_AdminLambdaRole"
+  name = "TaxFlowsAI_AdminLambdaRole_v2"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
