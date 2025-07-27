@@ -4,23 +4,21 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.0"
+      version = "~> 6.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.7"
     }
   }
 
-  backend "s3" {
-    bucket         = var.state_bucket
-    key            = var.state_key
-    region         = var.state_region
-    encrypt        = true
-    dynamodb_table = var.lock_table
-  }
+  backend "s3" {}
 }
 
 provider "aws" {
   region = var.region
-  # You can also add default_tags here if you want:
-  # default_tags {
-  #   tags = var.common_tags
-  # }
+
+  default_tags {
+    tags = var.common_tags
+  }
 }

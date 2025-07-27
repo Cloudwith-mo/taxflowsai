@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "codepipeline_assume" {
 # 2) IAM Roles
 # ──────────────────────────────────────────────────────────────────────────────
 resource "aws_iam_role" "codebuild" {
-  name               = "taxflowsai-codebuild-role"
+  name               = "taxflowsai-codebuild-role-v2"
   assume_role_policy = data.aws_iam_policy_document.codebuild_assume.json
   tags = {
     Project = "TaxFlowsAI"

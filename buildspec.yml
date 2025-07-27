@@ -4,13 +4,25 @@ phases:
     runtime-versions:
       nodejs: 18
     commands:
+      - echo "Installing dependencies..."
       - cd frontend
       - npm ci
+  pre_build:
+    commands:
+      - echo "Creating build directory..."
+      - cd frontend
+      - mkdir -p build
   build:
     commands:
+      - echo "Building frontend..."
       - cd frontend
       - npm run build
+      - cp taxflowsai-client-dashboard.html build/index.html
+      - cp taxflowsai-login.html build/login.html
+      - cp taxflowsai-admin-dashboard.html build/admin-dashboard.html
+      - cp CNAME build/CNAME
   post_build:
     commands:
-      # Sync the build output to S3
-      - aws s3 sync ./frontend/build s3://taxflowsai-frontend-site --delete
+      - echo "Syncing to S3..."
+      - aws s3 sync frontend/build s3://taxflowsai-frontend-site --delete
+      - echo "Build completed successfully"

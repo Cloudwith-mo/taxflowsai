@@ -29,10 +29,13 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      - name: Create build directory
+        working-directory: frontend
+        run: mkdir -p build
+
       - name: Build frontend
         working-directory: frontend
         run: npm run build
-
 
       - name: Copy client dashboard → index.html
         working-directory: frontend
@@ -45,6 +48,10 @@ jobs:
       - name: Copy admin page
         working-directory: frontend
         run: cp taxflowsai-admin-dashboard.html build/admin-dashboard.html
+
+      - name: Copy CNAME file
+        working-directory: frontend
+        run: cp CNAME build/CNAME
 
 
       - name: Deploy to GitHub Pages
