@@ -166,7 +166,7 @@ resource "aws_codebuild_project" "terraform_plan" {
 
   source {
     type      = "CODEPIPELINE"
-    buildspec = file("buildspec-tf-plan.yml")
+    buildspec = "terraform/buildspec-tf-plan.yml"
   }
 
   tags = { Project = "TaxFlowsAI", Environment = "prod" }
@@ -186,7 +186,7 @@ resource "aws_codebuild_project" "terraform_apply" {
 
   source {
     type      = "CODEPIPELINE"
-    buildspec = file("buildspec-tf-apply.yml")
+    buildspec = "terraform/buildspec-tf-apply.yml"
   }
 
   tags = { Project = "TaxFlowsAI", Environment = "prod" }
