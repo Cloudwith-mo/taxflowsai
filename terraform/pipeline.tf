@@ -91,22 +91,16 @@ locals {
   }
 }
 
-resource "aws_iam_policy" "artifact_bucket_access" {
-  name        = "taxflowsai-artifact-bucket-access"
-  description = "Allow CI/CD to read/write S3 artifacts"
-  policy      = jsonencode(local.artifact_policy)
+data "aws_iam_policy" "artifact_bucket_access" {
+  name = "taxflowsai-artifact-bucket-access"
 }
 
-resource "aws_iam_policy" "codestar_connection" {
-  name        = "taxflowsai-codestar-connection"
-  description = "Allow CodePipeline to use CodeStar Connection"
-  policy      = jsonencode(local.codestar_policy)
+data "aws_iam_policy" "codestar_connection" {
+  name = "taxflowsai-codestar-connection"
 }
 
-resource "aws_iam_policy" "pipeline_start_build" {
-  name        = "taxflowsai-pipeline-start-build"
-  description = "Allow pipeline to kick off CodeBuild"
-  policy      = jsonencode(local.pipeline_start_build_policy)
+data "aws_iam_policy" "pipeline_start_build" {
+  name = "taxflowsai-pipeline-start-build"
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -129,30 +123,29 @@ resource "aws_iam_role_policy_attachment" "codepipeline_managed" {
 
 resource "aws_iam_role_policy_attachment" "codebuild_artifacts" {
   role       = aws_iam_role.codebuild.name
-  policy_arn = aws_iam_policy.artifact_bucket_access.arn
+  policy_arn = data.aws_iam_policy.artifact_bucket_access.arn
 }
 
 resource "aws_iam_role_policy_attachment" "codepipeline_artifacts" {
   role       = aws_iam_role.codepipeline.name
-  policy_arn = aws_iam_policy.artifact_bucket_access.arn
+  policy_arn = data.aws_iam_policy.artifact_bucket_access.arn
 }
 
 resource "aws_iam_role_policy_attachment" "codepipeline_codestar" {
   role       = aws_iam_role.codepipeline.name
-  policy_arn = aws_iam_policy.codestar_connection.arn
+  policy_arn = data.aws_iam_policy.codestar_connection.arn
 }
 
 resource "aws_iam_role_policy_attachment" "codepipeline_start_build" {
   role       = aws_iam_role.codepipeline.name
-  policy_arn = aws_iam_policy.pipeline_start_build.arn
+  policy_arn = data.aws_iam_policy.pipeline_start_build.arn
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 5) Artifact S3 Bucket
 # ──────────────────────────────────────────────────────────────────────────────
-resource "aws_s3_bucket" "artifacts" {
+data "aws_s3_bucket" "artifacts" {
   bucket = var.artifact_bucket
-  tags   = { Project = "TaxFlowsAI", Environment = "prod" }
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -208,7 +201,7 @@ resource "aws_codepipeline" "terraform" {
 
   artifact_store {
     type     = "S3"
-    location = aws_s3_bucket.artifacts.bucket
+    location = data.aws_s3_bucket.artifacts.bucket
   }
 
   stage {
