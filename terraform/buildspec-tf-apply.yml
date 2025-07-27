@@ -1,12 +1,22 @@
-# buildspec-tf-apply.yml
 version: 0.2
+
 phases:
   install:
     commands:
-      - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-      - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-      - sudo apt-get update && sudo apt-get install terraform -y
+      - echo "Installing Terraform v1.4.6"
+      - curl -Lo tf.zip https://releases.hashicorp.com/terraform/1.4.6/terraform_1.4.6_linux_amd64.zip
+      - unzip tf.zip
+      - mv terraform /usr/local/bin/
+      - terraform --version
+  pre_build:
+    commands:
+      - echo "Initializing Terraform"
+      - terraform init -input=false
   build:
     commands:
-      - cd terraform
+      - echo "Applying Terraform"
       - terraform apply -auto-approve plan.tfplan
+
+cache:
+  paths:
+    - "~/.terraform.d/plugin-cache/*"

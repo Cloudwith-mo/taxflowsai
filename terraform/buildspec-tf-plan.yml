@@ -1,17 +1,33 @@
 version: 0.2
+
 phases:
   install:
     commands:
-      - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-      - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-      - sudo apt-get update && sudo apt-get install terraform -y
+      - echo "Installing Terraform v1.4.6"
+      - curl -Lo tf.zip https://releases.hashicorp.com/terraform/1.4.6/terraform_1.4.6_linux_amd64.zip
+      - unzip tf.zip
+      - mv terraform /usr/local/bin/
+      - terraform --version
+  pre_build:
+    commands:
+      - echo "Initializing Terraform"
+      - terraform init -input=false \
+          -backend-config="bucket=${ARTIFACT_BUCKET}" \
+          -backend-config="key=${STATE_KEY}" \
+          -backend-config="region=${AWS_REGION}" \
+          -backend-config="dynamodb_table=${LOCK_TABLE}"
   build:
     commands:
-      - cd terraform
-      - terraform init -input=false
-      - terraform fmt -recursive
+      - echo "Formatting & Validating"
+      - terraform fmt -check
       - terraform validate
-      - terraform plan -out plan.tfplan
+      - echo "Planning"
+      - terraform plan -out=plan.tfplan
+
 artifacts:
   files:
-    - terraform/plan.tfplan
+    - plan.tfplan
+
+cache:
+  paths:
+    - "~/.terraform.d/plugin-cache/*"
