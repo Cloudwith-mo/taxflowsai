@@ -9,10 +9,19 @@ phases:
       - unzip -o tf.zip
       - sudo mv terraform /usr/local/bin/
       - terraform --version
+
   pre_build:
     commands:
-      - echo "Initializing Terraform"
-      - terraform init -input=false
+      - echo "Retrieving the plan artifact"
+      - cp $CODEBUILD_SRC_DIR_PLANOUTPUT/plan.tfplan .                     # bring plan into cwd
+      - echo "Initializing Terraform with remote state"
+      - terraform init -input=false \
+          -backend-config="bucket=${ARTIFACT_BUCKET}" \
+          -backend-config="key=${STATE_KEY}" \
+          -backend-config="region=${AWS_REGION}" \
+          -backend-config="dynamodb_table=${LOCK_TABLE}" \
+          -reconfigure
+
   build:
     commands:
       - echo "Applying Terraform"

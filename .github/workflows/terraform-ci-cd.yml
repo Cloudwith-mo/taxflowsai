@@ -32,7 +32,11 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        run: terraform init
+        run: |
+          terraform init \
+            -backend-config="bucket=taxflowsai-pipeline-artifacts-0737" \
+            -backend-config="key=terraform/terraform.tfstate" \
+            -backend-config="region=us-east-1"
 
       - name: Terraform Format Check
         run: terraform fmt -check
