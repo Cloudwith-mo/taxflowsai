@@ -35,9 +35,11 @@ jobs:
       - name: Terraform Init
         run: |
           terraform init \
-            -backend-config="bucket=taxflowsai-pipeline-artifacts-0737" \
-            -backend-config="key=terraform/terraform.tfstate" \
-            -backend-config="region=us-east-1"
+            -backend-config="bucket=taxflowsai-terraform-state" \
+            -backend-config="key=prod/terraform.tfstate" \
+            -backend-config="region=us-east-1" \
+            -backend-config="dynamodb_table=TaxFlowsAI_Metadata" \
+            -reconfigure
 
       - name: Terraform Format Check
         run: terraform fmt -check
