@@ -5,7 +5,6 @@ phases:
     commands:
       - echo "Installing Terraform v1.4.6"
       - curl -Lo tf.zip https://releases.hashicorp.com/terraform/1.4.6/terraform_1.4.6_linux_amd64.zip
-      - rm -rf terraform
       - unzip -o tf.zip
       - sudo mv terraform /usr/local/bin/
       - terraform --version
@@ -13,8 +12,9 @@ phases:
   pre_build:
     commands:
       - echo "Retrieving the plan artifact"
-      - cp $CODEBUILD_SRC_DIR_PLANOUTPUT/plan.tfplan .                     # bring plan into cwd
+      - cp $CODEBUILD_SRC_DIR_PLANOUTPUT/terraform/plan.tfplan terraform/
       - echo "Initializing Terraform with remote state"
+      - cd terraform
       - terraform init -input=false \
           -backend-config="bucket=${ARTIFACT_BUCKET}" \
           -backend-config="key=${STATE_KEY}" \

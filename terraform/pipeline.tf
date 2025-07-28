@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "codepipeline_assume" {
 # 2) IAM Roles
 # ──────────────────────────────────────────────────────────────────────────────
 resource "aws_iam_role" "codebuild" {
-  name               = "taxflowsai-codebuild-role-v3"
+  name               = "taxflowsai-codebuild-role-v2"
   assume_role_policy = data.aws_iam_policy_document.codebuild_assume.json
   tags = {
     Project = "TaxFlowsAI"
@@ -84,9 +84,24 @@ locals {
         "codebuild:BatchGetProjects",
       ]
       Resource = [
+        aws_codebuild_project.terraform_build.arn,
         aws_codebuild_project.terraform_plan.arn,
         aws_codebuild_project.terraform_apply.arn,
       ]
+    }]
+  }
+
+  codebuild_logs_policy = {
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "AllowCloudWatchLogs"
+      Effect = "Allow"
+      Action = [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ]
+      Resource = "arn:aws:logs:*:*:*"
     }]
   }
 }
@@ -141,6 +156,12 @@ resource "aws_iam_role_policy_attachment" "codepipeline_start_build" {
   policy_arn = data.aws_iam_policy.pipeline_start_build.arn
 }
 
+resource "aws_iam_role_policy" "codebuild_logs" {
+  name   = "codebuild-logs-policy"
+  role   = aws_iam_role.codebuild.id
+  policy = jsonencode(local.codebuild_logs_policy)
+}
+
 # ──────────────────────────────────────────────────────────────────────────────
 # 5) Artifact S3 Bucket
 # ──────────────────────────────────────────────────────────────────────────────
@@ -151,6 +172,27 @@ data "aws_s3_bucket" "artifacts" {
 # ──────────────────────────────────────────────────────────────────────────────
 # 6) CodeBuild Projects
 # ──────────────────────────────────────────────────────────────────────────────
+resource "aws_codebuild_project" "terraform_build" {
+  name         = "taxflowsai-terraform-build"
+  service_role = aws_iam_role.codebuild.arn
+
+  artifacts { type = "CODEPIPELINE" }
+
+  environment {
+    compute_type    = "BUILD_GENERAL1_SMALL"
+    image           = "aws/codebuild/standard:6.0"
+    type            = "LINUX_CONTAINER"
+    privileged_mode = true
+  }
+
+  source {
+    type      = "CODEPIPELINE"
+    buildspec = "terraform/buildspec-tf-build.yml"
+  }
+
+  tags = { Project = "TaxFlowsAI", Environment = "prod" }
+}
+
 resource "aws_codebuild_project" "terraform_plan" {
   name         = "taxflowsai-terraform-plan"
   service_role = aws_iam_role.codebuild.arn
@@ -165,8 +207,44 @@ resource "aws_codebuild_project" "terraform_plan" {
   }
 
   source {
-    type      = "CODEPIPELINE"
-    buildspec = "terraform/buildspec-tf-plan.yml"
+    type = "CODEPIPELINE"
+    buildspec = <<EOF
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Installing Terraform v1.4.6"
+      - rm -f tf.zip terraform || true
+      - curl -Lo tf.zip https://releases.hashicorp.com/terraform/1.4.6/terraform_1.4.6_linux_amd64.zip
+      - unzip -o tf.zip
+      - sudo mv terraform /usr/local/bin/terraform
+      - terraform --version
+  pre_build:
+    commands:
+      - echo "Initializing Terraform"
+      - cd terraform
+      - terraform init -input=false \
+          -backend-config="bucket=$${ARTIFACT_BUCKET}" \
+          -backend-config="key=$${STATE_KEY}" \
+          -backend-config="region=$${AWS_REGION}" \
+          -backend-config="dynamodb_table=$${LOCK_TABLE}"
+  build:
+    commands:
+      - echo "Formatting & Validating"
+      - terraform fmt -check
+      - terraform validate
+      - echo "Planning"
+      - terraform plan -out=plan.tfplan
+
+artifacts:
+  files:
+    - terraform/plan.tfplan
+
+cache:
+  paths:
+    - "~/.terraform.d/plugin-cache/*"
+EOF
   }
 
   tags = { Project = "TaxFlowsAI", Environment = "prod" }
@@ -185,8 +263,39 @@ resource "aws_codebuild_project" "terraform_apply" {
   }
 
   source {
-    type      = "CODEPIPELINE"
-    buildspec = "terraform/buildspec-tf-apply.yml"
+    type = "CODEPIPELINE"
+    buildspec = <<EOF
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Installing Terraform v1.4.6"
+      - curl -Lo tf.zip https://releases.hashicorp.com/terraform/1.4.6/terraform_1.4.6_linux_amd64.zip
+      - unzip -o tf.zip
+      - sudo mv terraform /usr/local/bin/
+      - terraform --version
+  pre_build:
+    commands:
+      - echo "Retrieving the plan artifact"
+      - cp $$CODEBUILD_SRC_DIR_PLANOUTPUT/terraform/plan.tfplan terraform/
+      - echo "Initializing Terraform with remote state"
+      - cd terraform
+      - terraform init -input=false \
+          -backend-config="bucket=$${ARTIFACT_BUCKET}" \
+          -backend-config="key=$${STATE_KEY}" \
+          -backend-config="region=$${AWS_REGION}" \
+          -backend-config="dynamodb_table=$${LOCK_TABLE}" \
+          -reconfigure
+  build:
+    commands:
+      - echo "Applying Terraform"
+      - terraform apply -auto-approve plan.tfplan
+
+cache:
+  paths:
+    - "~/.terraform.d/plugin-cache/*"
+EOF
   }
 
   tags = { Project = "TaxFlowsAI", Environment = "prod" }
@@ -225,6 +334,24 @@ resource "aws_codepipeline" "terraform" {
   }
 
   stage {
+    name = "Build"
+    action {
+      name             = "PrepareDependencies"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      version          = "1"
+      input_artifacts  = ["SourceOutput"]
+      output_artifacts = ["BuildOutput"]
+      run_order        = 1
+
+      configuration = {
+        ProjectName = aws_codebuild_project.terraform_build.name
+      }
+    }
+  }
+
+  stage {
     name = "Plan"
     action {
       name             = "TerraformPlan"
@@ -232,7 +359,7 @@ resource "aws_codepipeline" "terraform" {
       owner            = "AWS"
       provider         = "CodeBuild"
       version          = "1"
-      input_artifacts  = ["SourceOutput"]
+      input_artifacts  = ["BuildOutput"]
       output_artifacts = ["PlanOutput"]
       run_order        = 1
 

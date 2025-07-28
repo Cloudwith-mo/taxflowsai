@@ -1,0 +1,32 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Installing dependencies"
+      - apt-get update
+      - apt-get install -y zip python3-pip
+  
+  pre_build:
+    commands:
+      - echo "Preparing Lambda function packages"
+      - cd lambda_function
+      - zip -r ../terraform/lambda/lambda_function.zip . -x "*.pyc" "__pycache__/*"
+      - cd ../GetUploadUrl
+      - zip -r ../terraform/lambda/getuploadurl.zip . -x "*.pyc" "__pycache__/*"
+      - cd ../ListDocuments
+      - zip -r ../terraform/lambda/listdocuments.zip . -x "*.pyc" "__pycache__/*"
+      - cd ..
+  
+  build:
+    commands:
+      - echo "Build stage completed"
+      - ls -la terraform/lambda/
+
+artifacts:
+  files:
+    - '**/*'
+
+cache:
+  paths:
+    - "~/.terraform.d/plugin-cache/*"

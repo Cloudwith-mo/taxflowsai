@@ -5,13 +5,13 @@ phases:
     commands:
       - echo "Installing Terraform v1.4.6"
       - curl -Lo tf.zip https://releases.hashicorp.com/terraform/1.4.6/terraform_1.4.6_linux_amd64.zip
-      - rm -rf terraform
       - unzip -o tf.zip
       - sudo mv terraform /usr/local/bin/
       - terraform --version
   pre_build:
     commands:
       - echo "Initializing Terraform"
+      - cd terraform
       - terraform init -input=false \
           -backend-config="bucket=${ARTIFACT_BUCKET}" \
           -backend-config="key=${STATE_KEY}" \
@@ -27,7 +27,7 @@ phases:
 
 artifacts:
   files:
-    - plan.tfplan
+    - terraform/plan.tfplan
 
 cache:
   paths:
