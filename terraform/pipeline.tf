@@ -49,48 +49,45 @@ resource "aws_iam_role" "codepipeline" {
 # ──────────────────────────────────────────────────────────────────────────────
 # 3) Custom IAM Policies via Locals
 # ──────────────────────────────────────────────────────────────────────────────
+data "aws_iam_policy_document" "artifact_bucket_access" {
+  statement {
+    sid    = "AllowPipelineArtifacts"
+    effect = "Allow"
+    actions = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
+    resources = [
+      "arn:aws:s3:::${var.artifact_bucket}",
+      "arn:aws:s3:::${var.artifact_bucket}/*",
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "codestar_connection" {
+  statement {
+    sid       = "AllowUseOfCodeStarConnection"
+    effect    = "Allow"
+    actions   = ["codestar-connections:UseConnection"]
+    resources = [var.codestar_connection_arn]
+  }
+}
+
+data "aws_iam_policy_document" "pipeline_start_build" {
+  statement {
+    sid    = "AllowPipelineStartBuild"
+    effect = "Allow"
+    actions = [
+      "codebuild:StartBuild",
+      "codebuild:BatchGetBuilds",
+      "codebuild:BatchGetProjects",
+    ]
+    resources = [
+      aws_codebuild_project.terraform_build.arn,
+      aws_codebuild_project.terraform_plan.arn,
+      aws_codebuild_project.terraform_apply.arn,
+    ]
+  }
+}
+
 locals {
-  artifact_policy = {
-    Version = "2012-10-17"
-    Statement = [{
-      Sid    = "AllowPipelineArtifacts"
-      Effect = "Allow"
-      Action = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
-      Resource = [
-        "arn:aws:s3:::${var.artifact_bucket}",
-        "arn:aws:s3:::${var.artifact_bucket}/*",
-      ]
-    }]
-  }
-
-  codestar_policy = {
-    Version = "2012-10-17"
-    Statement = [{
-      Sid      = "AllowUseOfCodeStarConnection"
-      Effect   = "Allow"
-      Action   = ["codestar-connections:UseConnection"]
-      Resource = [var.codestar_connection_arn]
-    }]
-  }
-
-  pipeline_start_build_policy = {
-    Version = "2012-10-17"
-    Statement = [{
-      Sid    = "AllowPipelineStartBuild"
-      Effect = "Allow"
-      Action = [
-        "codebuild:StartBuild",
-        "codebuild:BatchGetBuilds",
-        "codebuild:BatchGetProjects",
-      ]
-      Resource = [
-        aws_codebuild_project.terraform_build.arn,
-        aws_codebuild_project.terraform_plan.arn,
-        aws_codebuild_project.terraform_apply.arn,
-      ]
-    }]
-  }
-
   codebuild_logs_policy = {
     Version = "2012-10-17"
     Statement = [{
@@ -106,16 +103,34 @@ locals {
   }
 }
 
-data "aws_iam_policy" "artifact_bucket_access" {
-  name = "taxflowsai-artifact-bucket-access"
+resource "aws_iam_policy" "artifact_bucket_access" {
+  name        = "taxflowsai-artifact-bucket-access"
+  description = "Allow CI/CD to read/write S3 artifacts"
+  policy      = data.aws_iam_policy_document.artifact_bucket_access.json
+  tags = {
+    Env     = "prod"
+    Project = "TaxFlowsAI"
+  }
 }
 
-data "aws_iam_policy" "codestar_connection" {
-  name = "taxflowsai-codestar-connection"
+resource "aws_iam_policy" "codestar_connection" {
+  name        = "taxflowsai-codestar-connection"
+  description = "Allow use of CodeStar connection"
+  policy      = data.aws_iam_policy_document.codestar_connection.json
+  tags = {
+    Env     = "prod"
+    Project = "TaxFlowsAI"
+  }
 }
 
-data "aws_iam_policy" "pipeline_start_build" {
-  name = "taxflowsai-pipeline-start-build"
+resource "aws_iam_policy" "pipeline_start_build" {
+  name        = "taxflowsai-pipeline-start-build"
+  description = "Allow pipeline to start CodeBuild projects"
+  policy      = data.aws_iam_policy_document.pipeline_start_build.json
+  tags = {
+    Env     = "prod"
+    Project = "TaxFlowsAI"
+  }
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -138,22 +153,22 @@ resource "aws_iam_role_policy_attachment" "codepipeline_managed" {
 
 resource "aws_iam_role_policy_attachment" "codebuild_artifacts" {
   role       = aws_iam_role.codebuild.name
-  policy_arn = data.aws_iam_policy.artifact_bucket_access.arn
+  policy_arn = aws_iam_policy.artifact_bucket_access.arn
 }
 
 resource "aws_iam_role_policy_attachment" "codepipeline_artifacts" {
   role       = aws_iam_role.codepipeline.name
-  policy_arn = data.aws_iam_policy.artifact_bucket_access.arn
+  policy_arn = aws_iam_policy.artifact_bucket_access.arn
 }
 
 resource "aws_iam_role_policy_attachment" "codepipeline_codestar" {
   role       = aws_iam_role.codepipeline.name
-  policy_arn = data.aws_iam_policy.codestar_connection.arn
+  policy_arn = aws_iam_policy.codestar_connection.arn
 }
 
 resource "aws_iam_role_policy_attachment" "codepipeline_start_build" {
   role       = aws_iam_role.codepipeline.name
-  policy_arn = data.aws_iam_policy.pipeline_start_build.arn
+  policy_arn = aws_iam_policy.pipeline_start_build.arn
 }
 
 resource "aws_iam_role_policy" "codebuild_logs" {
@@ -165,8 +180,12 @@ resource "aws_iam_role_policy" "codebuild_logs" {
 # ──────────────────────────────────────────────────────────────────────────────
 # 5) Artifact S3 Bucket
 # ──────────────────────────────────────────────────────────────────────────────
-data "aws_s3_bucket" "artifacts" {
+resource "aws_s3_bucket" "artifacts" {
   bucket = var.artifact_bucket
+  tags = {
+    Environment = "prod"
+    Project     = "TaxFlowsAI"
+  }
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -207,44 +226,8 @@ resource "aws_codebuild_project" "terraform_plan" {
   }
 
   source {
-    type = "CODEPIPELINE"
-    buildspec = <<EOF
-version: 0.2
-
-phases:
-  install:
-    commands:
-      - echo "Installing Terraform v1.4.6"
-      - rm -f tf.zip terraform || true
-      - curl -Lo tf.zip https://releases.hashicorp.com/terraform/1.4.6/terraform_1.4.6_linux_amd64.zip
-      - unzip -o tf.zip
-      - sudo mv terraform /usr/local/bin/terraform
-      - terraform --version
-  pre_build:
-    commands:
-      - echo "Initializing Terraform"
-      - cd terraform
-      - terraform init -input=false \
-          -backend-config="bucket=$${ARTIFACT_BUCKET}" \
-          -backend-config="key=$${STATE_KEY}" \
-          -backend-config="region=$${AWS_REGION}" \
-          -backend-config="dynamodb_table=$${LOCK_TABLE}"
-  build:
-    commands:
-      - echo "Formatting & Validating"
-      - terraform fmt -check
-      - terraform validate
-      - echo "Planning"
-      - terraform plan -out=plan.tfplan
-
-artifacts:
-  files:
-    - terraform/plan.tfplan
-
-cache:
-  paths:
-    - "~/.terraform.d/plugin-cache/*"
-EOF
+    type      = "CODEPIPELINE"
+    buildspec = "terraform/buildspec-tf-plan.yml"
   }
 
   tags = { Project = "TaxFlowsAI", Environment = "prod" }
@@ -263,39 +246,8 @@ resource "aws_codebuild_project" "terraform_apply" {
   }
 
   source {
-    type = "CODEPIPELINE"
-    buildspec = <<EOF
-version: 0.2
-
-phases:
-  install:
-    commands:
-      - echo "Installing Terraform v1.4.6"
-      - curl -Lo tf.zip https://releases.hashicorp.com/terraform/1.4.6/terraform_1.4.6_linux_amd64.zip
-      - unzip -o tf.zip
-      - sudo mv terraform /usr/local/bin/
-      - terraform --version
-  pre_build:
-    commands:
-      - echo "Retrieving the plan artifact"
-      - cp $$CODEBUILD_SRC_DIR_PLANOUTPUT/terraform/plan.tfplan terraform/
-      - echo "Initializing Terraform with remote state"
-      - cd terraform
-      - terraform init -input=false \
-          -backend-config="bucket=$${ARTIFACT_BUCKET}" \
-          -backend-config="key=$${STATE_KEY}" \
-          -backend-config="region=$${AWS_REGION}" \
-          -backend-config="dynamodb_table=$${LOCK_TABLE}" \
-          -reconfigure
-  build:
-    commands:
-      - echo "Applying Terraform"
-      - terraform apply -auto-approve plan.tfplan
-
-cache:
-  paths:
-    - "~/.terraform.d/plugin-cache/*"
-EOF
+    type      = "CODEPIPELINE"
+    buildspec = "terraform/buildspec-tf-apply.yml"
   }
 
   tags = { Project = "TaxFlowsAI", Environment = "prod" }
@@ -310,7 +262,7 @@ resource "aws_codepipeline" "terraform" {
 
   artifact_store {
     type     = "S3"
-    location = data.aws_s3_bucket.artifacts.bucket
+    location = aws_s3_bucket.artifacts.bucket
   }
 
   stage {
