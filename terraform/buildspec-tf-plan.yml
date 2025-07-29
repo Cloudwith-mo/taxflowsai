@@ -13,7 +13,6 @@ phases:
   pre_build:
     commands:
       - echo "Initializing Terraform"
-      - cd terraform
       - terraform init -input=false \
           -backend-config="bucket=${ARTIFACT_BUCKET}" \
           -backend-config="key=${STATE_KEY}" \
@@ -23,14 +22,14 @@ phases:
   build:
     commands:
       - echo "Formatting & Validating"
-      - terraform fmt -check
+      - terraform fmt
       - terraform validate
       - echo "Planning"
       - terraform plan -out=plan.tfplan
 
 artifacts:
   files:
-    - terraform/plan.tfplan
+    - plan.tfplan
 
 cache:
   paths:

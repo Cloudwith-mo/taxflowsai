@@ -51,8 +51,8 @@ resource "aws_iam_role" "codepipeline" {
 # ──────────────────────────────────────────────────────────────────────────────
 data "aws_iam_policy_document" "artifact_bucket_access" {
   statement {
-    sid    = "AllowPipelineArtifacts"
-    effect = "Allow"
+    sid     = "AllowPipelineArtifacts"
+    effect  = "Allow"
     actions = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
     resources = [
       "arn:aws:s3:::${var.artifact_bucket}",

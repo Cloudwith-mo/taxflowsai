@@ -13,9 +13,8 @@ phases:
   pre_build:
     commands:
       - echo "Retrieving the plan artifact"
-      - cp $CODEBUILD_SRC_DIR_PLANOUTPUT/terraform/plan.tfplan terraform/
+      - cp $CODEBUILD_SRC_DIR_PLANOUTPUT/plan.tfplan ./
       - echo "Initializing Terraform with remote state"
-      - cd terraform
       - terraform init -input=false \
           -backend-config="bucket=${ARTIFACT_BUCKET}" \
           -backend-config="key=${STATE_KEY}" \
