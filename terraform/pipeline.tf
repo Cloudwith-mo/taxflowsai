@@ -223,6 +223,23 @@ resource "aws_codebuild_project" "terraform_plan" {
     image           = "aws/codebuild/standard:6.0"
     type            = "LINUX_CONTAINER"
     privileged_mode = true
+
+    environment_variable {
+      name  = "ARTIFACT_BUCKET"
+      value = "taxflowsai-terraform-state"
+    }
+    environment_variable {
+      name  = "STATE_KEY"
+      value = "prod/terraform.tfstate"
+    }
+    environment_variable {
+      name  = "AWS_REGION"
+      value = "us-east-1"
+    }
+    environment_variable {
+      name  = "LOCK_TABLE"
+      value = "terraform-state-lock"
+    }
   }
 
   source {
@@ -243,6 +260,23 @@ resource "aws_codebuild_project" "terraform_apply" {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "aws/codebuild/standard:6.0"
     type         = "LINUX_CONTAINER"
+
+    environment_variable {
+      name  = "ARTIFACT_BUCKET"
+      value = "taxflowsai-terraform-state"
+    }
+    environment_variable {
+      name  = "STATE_KEY"
+      value = "prod/terraform.tfstate"
+    }
+    environment_variable {
+      name  = "AWS_REGION"
+      value = "us-east-1"
+    }
+    environment_variable {
+      name  = "LOCK_TABLE"
+      value = "terraform-state-lock"
+    }
   }
 
   source {
