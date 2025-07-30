@@ -38,7 +38,7 @@ jobs:
             -backend-config="bucket=taxflowsai-terraform-state" \
             -backend-config="key=prod/terraform.tfstate" \
             -backend-config="region=us-east-1" \
-            -backend-config="dynamodb_table=TaxFlowsAI_Metadata" \
+            -backend-config="dynamodb_table=terraform-state-lock" \
             -reconfigure
 
       - name: Terraform Format
