@@ -42,6 +42,10 @@ jobs:
         working-directory: frontend
         run: cp taxflowsai-client-dashboard.html build/index.html
 
+      - name: Copy landing page
+        working-directory: frontend
+        run: cp index.html build/landing.html
+
       - name: Copy login page
         working-directory: frontend
         run: cp taxflowsai-login.html build/login.html
