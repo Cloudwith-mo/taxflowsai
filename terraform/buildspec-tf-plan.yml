@@ -13,6 +13,7 @@ phases:
   pre_build:
     commands:
       - echo "Initializing Terraform"
+      - cd terraform
       - terraform init -input=false -backend-config=bucket=${ARTIFACT_BUCKET} -backend-config=key=${STATE_KEY} -backend-config=region=${AWS_REGION} -backend-config=dynamodb_table=${LOCK_TABLE}
 
   build:
@@ -24,6 +25,7 @@ phases:
       - terraform plan -out=plan.tfplan
 
 artifacts:
+  base-directory: terraform
   files:
     - plan.tfplan
 
