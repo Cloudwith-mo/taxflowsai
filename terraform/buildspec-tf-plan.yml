@@ -13,7 +13,7 @@ phases:
   pre_build:
     commands:
       - echo "Initializing Terraform"
-      - terraform init -input=false -backend-config="bucket=${ARTIFACT_BUCKET}" -backend-config="key=${STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${LOCK_TABLE}"
+      - terraform init -input=false -backend-config=bucket=${ARTIFACT_BUCKET} -backend-config=key=${STATE_KEY} -backend-config=region=${AWS_REGION} -backend-config=dynamodb_table=${LOCK_TABLE}
 
   build:
     commands:
