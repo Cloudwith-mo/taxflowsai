@@ -59,6 +59,15 @@ data "aws_iam_policy_document" "artifact_bucket_access" {
       "arn:aws:s3:::${var.artifact_bucket}/*",
     ]
   }
+  statement {
+    sid     = "AllowTerraformStateAccess"
+    effect  = "Allow"
+    actions = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
+    resources = [
+      "arn:aws:s3:::taxflowsai-terraform-state",
+      "arn:aws:s3:::taxflowsai-terraform-state/*",
+    ]
+  }
 }
 
 data "aws_iam_policy_document" "codestar_connection" {
