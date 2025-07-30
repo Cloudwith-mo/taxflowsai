@@ -1,4 +1,5 @@
 version: 0.2
+# Updated buildspec for proper terraform directory handling
 
 phases:
   install:
