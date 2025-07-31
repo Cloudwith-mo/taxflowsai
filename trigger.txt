@@ -1,1 +1,1 @@
-Pipeline trigger - Permanent fix: removed duplicate terraform workflow
+Pipeline trigger - Implemented best practice workflow

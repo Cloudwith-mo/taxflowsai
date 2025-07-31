@@ -1,18 +1,19 @@
-name: "Terraform Dev Environment"
+name: "Terraform Validation"
 
 on:
-  push:
-    branches:
-      - develop  # Different branch
+  pull_request:
+    paths:
+      - 'terraform/**'
   workflow_dispatch:
 
 permissions:
   id-token: write
   contents: read
+  pull-requests: write
 
 jobs:
-  terraform:
-    name: "Terraform Dev Deploy"
+  validate:
+    name: "Terraform Validate & Plan"
     runs-on: ubuntu-latest
 
     env:
@@ -25,20 +26,25 @@ jobs:
         working-directory: ./terraform
 
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set Up Terraform
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
         run: |
           terraform init \
             -backend-config="bucket=taxflowsai-terraform-state" \
-            -backend-config="key=dev/terraform.tfstate" \
+            -backend-config="key=prod/terraform.tfstate" \
             -backend-config="region=us-east-1" \
-            -backend-config="dynamodb_table=terraform-state-lock" \
-            -reconfigure
+            -backend-config="dynamodb_table=terraform-state-lock"
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve -no-color
+      - name: Terraform Format Check
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -no-color
