@@ -1,1 +1,1 @@
-Pipeline trigger - Checksum fixed again
+Pipeline trigger - DynamoDB permissions restored
