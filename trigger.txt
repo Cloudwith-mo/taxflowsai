@@ -1,1 +1,1 @@
-Pipeline trigger - $(date)
+Pipeline trigger - DynamoDB permissions fix applied
