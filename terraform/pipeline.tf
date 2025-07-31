@@ -131,7 +131,10 @@ data "aws_iam_policy_document" "terraform_permissions" {
       "lambda:GetFunction",
       "lambda:ListTags",
       "lambda:ListVersionsByFunction",
-      "dynamodb:DescribeTimeToLive"
+      "lambda:GetFunctionCodeSigningConfig",
+      "dynamodb:DescribeTimeToLive",
+      "dynamodb:ListTagsOfResource",
+      "s3:GetBucketCORS"
     ]
     resources = ["*"]
   }

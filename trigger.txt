@@ -1,1 +1,1 @@
-Pipeline trigger - Fixed checksum, no more local terraform
+Pipeline trigger - Added final missing permissions
