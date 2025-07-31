@@ -1,10 +1,11 @@
 name: "Terraform CI/CD"
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+  # Disabled to prevent race condition with AWS CodePipeline
+  # push:
+  #   branches:
+  #     - main
+  # pull_request:
   workflow_dispatch:
 
 permissions:
