@@ -96,22 +96,6 @@ data "aws_iam_policy_document" "pipeline_start_build" {
   }
 }
 
-data "aws_iam_policy_document" "terraform_lock" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "dynamodb:GetItem",
-      "dynamodb:PutItem",
-      "dynamodb:UpdateItem",
-      "dynamodb:DeleteItem",
-      "dynamodb:DescribeTable"
-    ]
-    resources = [
-      "arn:aws:dynamodb:us-east-1:995805900737:table/terraform-state-lock"
-    ]
-  }
-}
-
 locals {
   codebuild_logs_policy = {
     Version = "2012-10-17"
@@ -158,15 +142,6 @@ resource "aws_iam_policy" "pipeline_start_build" {
   }
 }
 
-resource "aws_iam_policy" "terraform_lock" {
-  name   = "taxflowsai-terraform-lock-access"
-  policy = data.aws_iam_policy_document.terraform_lock.json
-  tags = {
-    Env     = "prod"
-    Project = "TaxFlowsAI"
-  }
-}
-
 # ──────────────────────────────────────────────────────────────────────────────
 # 4) Attach Policies to Roles
 # ──────────────────────────────────────────────────────────────────────────────
@@ -203,11 +178,6 @@ resource "aws_iam_role_policy_attachment" "codepipeline_codestar" {
 resource "aws_iam_role_policy_attachment" "codepipeline_start_build" {
   role       = aws_iam_role.codepipeline.name
   policy_arn = aws_iam_policy.pipeline_start_build.arn
-}
-
-resource "aws_iam_role_policy_attachment" "codebuild_lock_access" {
-  role       = aws_iam_role.codebuild.name
-  policy_arn = aws_iam_policy.terraform_lock.arn
 }
 
 resource "aws_iam_role_policy" "codebuild_logs" {
