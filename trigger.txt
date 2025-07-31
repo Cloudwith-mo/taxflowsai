@@ -1,1 +1,1 @@
-Pipeline trigger - Implemented best practice workflow
+Pipeline trigger - Added all missing terraform permissions

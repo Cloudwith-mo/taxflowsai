@@ -119,14 +119,19 @@ data "aws_iam_policy_document" "terraform_permissions" {
     actions = [
       "iam:GetRole",
       "iam:GetPolicy",
+      "iam:GetPolicyVersion",
+      "iam:GetRolePolicy",
       "iam:ListAttachedRolePolicies",
       "iam:ListRolePolicies",
       "apigateway:GET",
       "s3:GetBucketPolicy",
       "s3:GetBucketVersioning",
       "s3:GetBucketLocation",
+      "s3:GetBucketAcl",
       "lambda:GetFunction",
-      "lambda:ListTags"
+      "lambda:ListTags",
+      "lambda:ListVersionsByFunction",
+      "dynamodb:DescribeTimeToLive"
     ]
     resources = ["*"]
   }
