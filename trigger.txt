@@ -1,1 +1,1 @@
-Pipeline trigger - Final checksum fix
+Pipeline trigger - Added comprehensive AWS permissions

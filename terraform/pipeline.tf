@@ -104,11 +104,31 @@ data "aws_iam_policy_document" "terraform_lock" {
       "dynamodb:PutItem",
       "dynamodb:UpdateItem",
       "dynamodb:DeleteItem",
-      "dynamodb:DescribeTable"
+      "dynamodb:DescribeTable",
+      "dynamodb:DescribeContinuousBackups"
     ]
     resources = [
       "arn:aws:dynamodb:us-east-1:995805900737:table/terraform-state-lock"
     ]
+  }
+}
+
+data "aws_iam_policy_document" "terraform_permissions" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:GetRole",
+      "iam:GetPolicy",
+      "iam:ListAttachedRolePolicies",
+      "iam:ListRolePolicies",
+      "apigateway:GET",
+      "s3:GetBucketPolicy",
+      "s3:GetBucketVersioning",
+      "s3:GetBucketLocation",
+      "lambda:GetFunction",
+      "lambda:ListTags"
+    ]
+    resources = ["*"]
   }
 }
 
@@ -167,6 +187,15 @@ resource "aws_iam_policy" "terraform_lock" {
   }
 }
 
+resource "aws_iam_policy" "terraform_permissions" {
+  name   = "taxflowsai-terraform-permissions"
+  policy = data.aws_iam_policy_document.terraform_permissions.json
+  tags = {
+    Env     = "prod"
+    Project = "TaxFlowsAI"
+  }
+}
+
 # ──────────────────────────────────────────────────────────────────────────────
 # 4) Attach Policies to Roles
 # ──────────────────────────────────────────────────────────────────────────────
@@ -208,6 +237,11 @@ resource "aws_iam_role_policy_attachment" "codepipeline_start_build" {
 resource "aws_iam_role_policy_attachment" "codebuild_lock_access" {
   role       = aws_iam_role.codebuild.name
   policy_arn = aws_iam_policy.terraform_lock.arn
+}
+
+resource "aws_iam_role_policy_attachment" "codebuild_terraform_permissions" {
+  role       = aws_iam_role.codebuild.name
+  policy_arn = aws_iam_policy.terraform_permissions.arn
 }
 
 resource "aws_iam_role_policy" "codebuild_logs" {
