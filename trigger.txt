@@ -1,1 +1,1 @@
-Pipeline trigger - Disabled GitHub Actions to prevent race condition
+Pipeline trigger - Permanent fix: removed duplicate terraform workflow

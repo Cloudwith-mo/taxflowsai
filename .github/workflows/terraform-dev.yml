@@ -1,11 +1,9 @@
-name: "Terraform CI/CD"
+name: "Terraform Dev Environment"
 
 on:
-  # Disabled to prevent race condition with AWS CodePipeline
-  # push:
-  #   branches:
-  #     - main
-  # pull_request:
+  push:
+    branches:
+      - develop  # Different branch
   workflow_dispatch:
 
 permissions:
@@ -14,7 +12,7 @@ permissions:
 
 jobs:
   terraform:
-    name: "Terraform Deploy"
+    name: "Terraform Dev Deploy"
     runs-on: ubuntu-latest
 
     env:
@@ -29,8 +27,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        with:
-          submodules: false
 
       - name: Set Up Terraform
         uses: hashicorp/setup-terraform@v3
@@ -39,23 +35,10 @@ jobs:
         run: |
           terraform init \
             -backend-config="bucket=taxflowsai-terraform-state" \
-            -backend-config="key=prod/terraform.tfstate" \
+            -backend-config="key=dev/terraform.tfstate" \
             -backend-config="region=us-east-1" \
             -backend-config="dynamodb_table=terraform-state-lock" \
             -reconfigure
 
-      - name: Terraform Format
-        run: terraform fmt
-
-      - name: Terraform Validate
-        run: terraform validate
-
-      - name: Terraform Plan
-        if: github.event_name == 'pull_request'
-        run: terraform plan -no-color
-        continue-on-error: false
-
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve -no-color
-
