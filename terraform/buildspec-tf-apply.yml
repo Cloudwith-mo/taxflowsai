@@ -15,7 +15,7 @@ phases:
       - cp $CODEBUILD_SRC_DIR_PLANOUTPUT/plan.tfplan terraform/
       - echo "Initializing Terraform with remote state"
       - cd terraform
-      - terraform init -input=false -backend-config=bucket=${ARTIFACT_BUCKET} -backend-config=key=${STATE_KEY} -backend-config=region=${AWS_REGION} -backend-config=dynamodb_table=${LOCK_TABLE} -reconfigure
+      - terraform init -input=false -backend-config=backend.hcl -reconfigure
 
   build:
     commands:
