@@ -20,7 +20,7 @@ phases:
   build:
     commands:
       - echo "Applying Terraform"
-      - terraform apply -auto-approve plan.tfplan
+      - terraform apply -auto-approve -no-color plan.tfplan
 
 cache:
   paths:

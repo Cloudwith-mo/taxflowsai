@@ -22,7 +22,7 @@ phases:
       - terraform fmt
       - terraform validate
       - echo "Planning"
-      - terraform plan -out=plan.tfplan
+      - terraform plan -out=plan.tfplan -no-color
 
 artifacts:
   base-directory: terraform
