@@ -14,7 +14,15 @@ phases:
     commands:
       - echo "Initializing Terraform"
       - cd terraform
-      - terraform init -input=false -backend-config=backend.hcl
+      - echo "Checking for state backend issues..."
+      - |
+        if ! terraform init -input=false -backend-config=backend.hcl 2>&1; then
+          echo "⚠️  Terraform init failed, attempting to fix state backend..."
+          chmod +x fix_state_backend.sh
+          ./fix_state_backend.sh
+          echo "🔄 Retrying terraform init..."
+          terraform init -input=false -backend-config=backend.hcl
+        fi
 
   build:
     commands:
