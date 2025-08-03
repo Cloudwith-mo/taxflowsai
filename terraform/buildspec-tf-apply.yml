@@ -1,24 +1,20 @@
 version: 0.2
 
-env:
-  variables:
-    PLAN_FILE: "$CODEBUILD_SRC_DIR_PlanOutput/plan.tfplan"
-
 phases:
   install:
     commands:
       - echo "Installing Terraform v1.4.6"
       - curl -Lo terraform.zip https://releases.hashicorp.com/terraform/1.4.6/terraform_1.4.6_linux_amd64.zip
-      - unzip -o terraform.zip -d /usr/local/bin
-      - chmod +x /usr/local/bin/terraform
+      - unzip -o terraform.zip -d /usr/local/bin && chmod +x /usr/local/bin/terraform
       - terraform --version
 
   pre_build:
     commands:
       - echo "Retrieving the plan artifact"
-      - "echo \"DEBUG: PLAN_FILE=$PLAN_FILE\""
+      - PLAN_FILE="$CODEBUILD_SRC_DIR_PlanOutput/plan.tfplan"
+      - echo "DEBUG: PLAN_FILE=$PLAN_FILE"
       - ls -l "$CODEBUILD_SRC_DIR_PlanOutput" || true
-      - "test -f \"$PLAN_FILE\" || { echo \"ERROR: $PLAN_FILE not found\"; exit 1; }"
+      - test -f "$PLAN_FILE" || { echo "ERROR: $PLAN_FILE not found"; exit 1; }
       - mkdir -p terraform
       - cp "$PLAN_FILE" terraform/
       - cd terraform
