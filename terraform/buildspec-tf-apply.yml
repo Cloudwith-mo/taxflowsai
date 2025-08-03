@@ -17,7 +17,7 @@ phases:
     commands:
       - echo "Retrieving the plan artifact"
       - echo "DEBUG: PLAN_FILE=$PLAN_FILE"
-      - ls -R "$CODEBUILD_SRC_DIR_PlanOutput"
+      - ls -la "$CODEBUILD_SRC_DIR_PlanOutput"
       - test -f "$PLAN_FILE" || { echo "ERROR: $PLAN_FILE not found"; exit 1; }
       - cp "$PLAN_FILE" terraform/
       - echo "Initializing Terraform with remote state"
