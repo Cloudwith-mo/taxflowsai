@@ -12,9 +12,9 @@ phases:
     commands:
       - echo "Retrieving the plan artifact"
       - PLAN_FILE="$CODEBUILD_SRC_DIR_PlanOutput/plan.tfplan"
-      - echo "DEBUG: PLAN_FILE=$PLAN_FILE"
+      - "echo DEBUG PLAN_FILE=$PLAN_FILE"
       - ls -l "$CODEBUILD_SRC_DIR_PlanOutput" || true
-      - test -f "$PLAN_FILE" || { echo "ERROR: $PLAN_FILE not found"; exit 1; }
+      - "test -f $PLAN_FILE || (echo 'ERROR plan file not found' && exit 1)"
       - mkdir -p terraform
       - cp "$PLAN_FILE" terraform/
       - cd terraform

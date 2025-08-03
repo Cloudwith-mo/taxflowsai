@@ -24,7 +24,7 @@ phases:
       - echo "Initializing Terraform"
       - terraform init -input=false -backend-config=backend.hcl
       - echo "Running security scan"
-      - tfsec . --format json --out tfsec-results.json || true
+      - "tfsec . --format json --out tfsec-results.json || true"
 
   build:
     commands:
