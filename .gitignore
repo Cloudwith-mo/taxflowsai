@@ -1,7 +1,33 @@
+# Terraform
 .terraform/
 terraform.tfstate
 terraform.tfstate.backup
+*.tfplan
+*.tfvars
+
+# Lambda packages
 *.zip
+src/lambda/*/function.zip
+src/lambda/shared/layer.zip
+src/lambda/shared/temp_layer/
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
 .DS_Store
 
-frontend/node_modules/
+# Logs
+*.log
+
+# Environment files
+.env
+.env.local
+
+# Build artifacts
+build/
+dist/

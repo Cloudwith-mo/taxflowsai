@@ -1,0 +1,45 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Installing Terraform v1.4.6"
+      - curl -Lo terraform.zip https://releases.hashicorp.com/terraform/1.4.6/terraform_1.4.6_linux_amd64.zip
+      - unzip -o terraform.zip -d /usr/local/bin
+      - chmod +x /usr/local/bin/terraform
+      - terraform --version
+      - echo "Installing security scanning tools"
+      - curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+
+  pre_build:
+    commands:
+      - echo "Running Lambda function tests"
+      - cd src/lambda
+      - python3 test_runner.py
+      - cd ../../
+      - echo "Building Lambda layer"
+      - cd src/lambda/shared
+      - ./build_layer.sh
+      - cd ../../../infrastructure/environments/prod
+      - echo "Initializing Terraform"
+      - terraform init -input=false -backend-config=backend.hcl
+      - echo "Running security scan"
+      - tfsec . --format json --out tfsec-results.json || true
+
+  build:
+    commands:
+      - echo "Validating Terraform"
+      - terraform validate
+      - terraform fmt -check
+      - echo "Planning infrastructure changes"
+      - terraform plan -out=plan.tfplan -no-color
+
+artifacts:
+  base-directory: infrastructure/environments/prod
+  files:
+    - plan.tfplan
+    - tfsec-results.json
+
+cache:
+  paths:
+    - "~/.terraform.d/plugin-cache/*"

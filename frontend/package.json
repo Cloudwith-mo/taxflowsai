@@ -2,14 +2,20 @@
   "name": "taxflowsai-frontend",
   "version": "1.0.0",
   "scripts": {
-    "build": "esbuild src/login.js --bundle --minify --define:API_BASE='\"https://dql2om6jc.execute-api.us-east-1.amazonaws.com/default\"' --outdir=build"
+    "build": "NODE_ENV=production esbuild src/login.js --bundle --minify --outdir=build",
+    "build:dev": "NODE_ENV=development esbuild src/login.js --bundle --outdir=build",
+    "build:staging": "NODE_ENV=staging esbuild src/login.js --bundle --minify --outdir=build",
+    "test": "jest",
+    "lint": "eslint src/"
   },
   "dependencies": {
     "aws-sdk": "^2.1622.0",
     "amazon-cognito-identity-js": "^6.0.0"
   },
   "devDependencies": {
-    "esbuild": "^0.19.0"
+    "esbuild": "^0.19.0",
+    "jest": "^29.0.0",
+    "eslint": "^8.0.0"
   }
 }
 

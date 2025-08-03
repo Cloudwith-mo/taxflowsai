@@ -53,7 +53,11 @@ data "aws_iam_policy_document" "artifact_bucket_access" {
   statement {
     sid     = "AllowPipelineArtifacts"
     effect  = "Allow"
-    actions = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:ListBucket"
+    ]
     resources = [
       "arn:aws:s3:::${var.artifact_bucket}",
       "arn:aws:s3:::${var.artifact_bucket}/*",
@@ -62,7 +66,11 @@ data "aws_iam_policy_document" "artifact_bucket_access" {
   statement {
     sid     = "AllowTerraformStateAccess"
     effect  = "Allow"
-    actions = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:ListBucket"
+    ]
     resources = [
       "arn:aws:s3:::taxflowsai-terraform-state",
       "arn:aws:s3:::taxflowsai-terraform-state/*",
@@ -117,26 +125,17 @@ data "aws_iam_policy_document" "terraform_permissions" {
   statement {
     effect = "Allow"
     actions = [
-      "iam:GetRole",
-      "iam:GetPolicy",
-      "iam:GetPolicyVersion",
-      "iam:GetRolePolicy",
-      "iam:ListAttachedRolePolicies",
-      "iam:ListRolePolicies",
-      "apigateway:GET",
-      "s3:GetBucketPolicy",
-      "s3:GetBucketVersioning",
-      "s3:GetBucketLocation",
-      "s3:GetBucketAcl",
-      "s3:GetBucketCORS",
-      "s3:GetBucketWebsite",
-      "lambda:GetFunction",
-      "lambda:ListTags",
-      "lambda:ListVersionsByFunction",
-      "lambda:GetFunctionCodeSigningConfig",
-      "lambda:GetPolicy",
-      "dynamodb:DescribeTimeToLive",
-      "dynamodb:ListTagsOfResource"
+      "s3:Get*",
+      "s3:List*",
+      "codepipeline:Get*",
+      "codepipeline:List*",
+      "lambda:Get*",
+      "lambda:List*",
+      "iam:Get*",
+      "iam:List*",
+      "dynamodb:Describe*",
+      "dynamodb:List*",
+      "apigateway:GET"
     ]
     resources = ["*"]
   }
@@ -458,11 +457,12 @@ resource "aws_codepipeline" "terraform" {
       owner           = "AWS"
       provider        = "CodeBuild"
       version         = "1"
-      input_artifacts = ["PlanOutput"]
+      input_artifacts = ["SourceOutput", "PlanOutput"]
       run_order       = 1
 
       configuration = {
-        ProjectName = aws_codebuild_project.terraform_apply.name
+        ProjectName   = aws_codebuild_project.terraform_apply.name
+        PrimarySource = "SourceOutput"
       }
     }
   }
