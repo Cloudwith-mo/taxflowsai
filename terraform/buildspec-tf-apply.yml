@@ -1,5 +1,9 @@
 version: 0.2
 
+env:
+  variables:
+    PLAN_FILE: "$CODEBUILD_SRC_DIR_PlanOutput/plan.tfplan"
+
 phases:
   install:
     commands:
@@ -12,7 +16,10 @@ phases:
   pre_build:
     commands:
       - echo "Retrieving the plan artifact"
-      - cp $CODEBUILD_SRC_DIR_PLANOUTPUT/plan.tfplan terraform/
+      - echo "DEBUG: PLAN_FILE=$PLAN_FILE"
+      - ls -R "$CODEBUILD_SRC_DIR_PlanOutput"
+      - test -f "$PLAN_FILE" || { echo "ERROR: $PLAN_FILE not found"; exit 1; }
+      - cp "$PLAN_FILE" terraform/
       - echo "Initializing Terraform with remote state"
       - cd terraform
       - terraform init -input=false -backend-config=backend.hcl -reconfigure
